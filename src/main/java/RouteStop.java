@@ -9,12 +9,16 @@ public class RouteStop {
 
     // Constructors
     public RouteStop(Long id, String route_name, Location location, LocalDateTime created_at) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+
         this.id = id;
         this.route_name = route_name;
         this.location = location;
         this.created_at = created_at;
     }
     public RouteStop(Long id, Location location, LocalDateTime created_at) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+
         this.id = id;
         this.location = location;
         this.created_at = created_at;

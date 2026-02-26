@@ -1,3 +1,9 @@
+CREATE DATABASE OOP_gca2;
+USE DATABASE OOP_gca2;
+
+-- user account, if not confirmed / confirm if it works
+CREATE USER 'OOP_gca2_user'@'localhost' IDENTIFIED VIA mysql_native_password USING '***';GRANT ALL PRIVILEGES ON *.* TO 'OOP_gca2_user'@'localhost' REQUIRE NONE WITH GRANT OPTION MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;GRANT ALL PRIVILEGES ON `OOP\_gca2`.* TO 'OOP_gca2_user'@'localhost';
+
 CREATE TABLE location (
      id INT AUTO_INCREMENT PRIMARY KEY,
      latitude DECIMAL(10, 8) NOT NULL,

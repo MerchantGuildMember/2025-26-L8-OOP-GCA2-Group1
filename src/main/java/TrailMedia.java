@@ -1,5 +1,6 @@
 import java.time.LocalDateTime;
 
+
 public class TrailMedia {
     // Fields
     private Long id;
@@ -14,6 +15,8 @@ public class TrailMedia {
     // Constructors
 
     public TrailMedia(Long id, Long trail_id, Long stop_id, String media_type, String url, String caption, LocalDateTime creation_time) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+
         this.id = id;
         this.trail_id = trail_id;
         this.stop_id = stop_id;
@@ -24,6 +27,8 @@ public class TrailMedia {
     }
 
     public TrailMedia(Long id, Long trail_id, String caption, String url, String media_type, LocalDateTime creation_time) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+
         this.id = id;
         this.trail_id = trail_id;
         this.caption = caption;

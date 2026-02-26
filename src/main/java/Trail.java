@@ -11,6 +11,10 @@ public class Trail {
 
     // Constructors
     public Trail(Long id, String name, String description, String difficulty, Double estimated_time, ArrayList<RouteStop> stops) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+        if(name == null || name.isBlank()) {throw new IllegalArgumentException("must have a name");}
+        if(stops.isEmpty()) {throw new IllegalArgumentException("stops cannot be empty");}
+
         this.id = id;
         this.name = name;
         this.description = description;
@@ -19,6 +23,10 @@ public class Trail {
         this.stops = stops;
     }
     public Trail(Long id, String name, ArrayList<RouteStop> stops) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+        if(name == null || name.isBlank()) {throw new IllegalArgumentException("must have a name");}
+        if(stops.isEmpty()) {throw new IllegalArgumentException("stops cannot be empty");}
+
         this.id = id;
         this.name = name;
         this.stops = stops;

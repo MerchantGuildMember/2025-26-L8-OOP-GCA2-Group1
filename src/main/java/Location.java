@@ -12,6 +12,8 @@ public class Location {
     // Constructors - I imagine id, lat, long and created_at to be absolutely required
     //              - full address not really if it's some remote place
     public Location(Long id, double latitude, double longitude, LocalDateTime created_at) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -19,6 +21,8 @@ public class Location {
     }
 
     public Location(Long id, double latitude, double longitude, String full_address, LocalDateTime created_at) {
+        if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
