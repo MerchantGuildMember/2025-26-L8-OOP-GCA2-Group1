@@ -1,4 +1,4 @@
-import java.util.List;
+import java.util.ArrayList;
 
 public class Trail {
     // Fields
@@ -7,10 +7,10 @@ public class Trail {
     private String description;
     private String difficulty;
     private Double estimated_time;
-    private List<RouteStop> stops;
+    private ArrayList<RouteStop> stops;
 
     // Constructors
-    public Trail(Long id, String name, String description, String difficulty, Double estimated_time, List<RouteStop> stops) {
+    public Trail(Long id, String name, String description, String difficulty, Double estimated_time, ArrayList<RouteStop> stops) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -18,7 +18,7 @@ public class Trail {
         this.estimated_time = estimated_time;
         this.stops = stops;
     }
-    public Trail(Long id, String name, List<RouteStop> stops) {
+    public Trail(Long id, String name, ArrayList<RouteStop> stops) {
         this.id = id;
         this.name = name;
         this.stops = stops;
@@ -30,7 +30,7 @@ public class Trail {
     public String getDescription() {return description;}
     public String getDifficulty() {return difficulty;}
     public Double getEstimated_time() {return estimated_time;}
-    public List<RouteStop> getStops() {return stops;}
+    public ArrayList<RouteStop> getStops() {return stops;}
 
     // Setters
     public void setId(Long id) {this.id = id;}
@@ -38,8 +38,30 @@ public class Trail {
     public void setDescription(String description) {this.description = description;}
     public void setDifficulty(String difficulty) {this.difficulty = difficulty;}
     public void setEstimated_time(Double estimated_time) {this.estimated_time = estimated_time;}
-    public void setStops(List<RouteStop> stops) {this.stops = stops;}
+    public void setStops(ArrayList<RouteStop> stops) {this.stops = stops;}
 
+
+    // to string
+
+
+    @Override
+    public String toString() {
+        return "Trail{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", difficulty='" + difficulty + '\'' +
+                ", estimated_time=" + estimated_time +
+                ", stops=" + stops +
+                '}';
+    }
+
+    // add more
+    public void addRoute_stops(RouteStop... args) {
+        for (int i = 0; i < args.length; i++) {
+            getStops().add(args[i]);
+        }
+    }
 
 
 }

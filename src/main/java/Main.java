@@ -1,8 +1,8 @@
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.ArrayList;
 
-public class main {
-    static void main() {
+public class Main {
+    static void main(String[] args) {
         // Locations
         Location location1 = new Location(20L, 9.0, 24.0, LocalDateTime.now());
         Location location2 = new Location(10L, 19.0, 210.0, LocalDateTime.now());
@@ -14,10 +14,13 @@ public class main {
         RouteStop route2 = new RouteStop(79L, location2, LocalDateTime.now());
         RouteStop route3 = new RouteStop(39L, location3, LocalDateTime.now());
         RouteStop route4 = new RouteStop(9L, location4, LocalDateTime.now());
-        List<RouteStop> routelist = List.of(route1, route2, route3);
+        ArrayList<RouteStop> routelist = new ArrayList<>();
+        routelist.add(route1); routelist.add(route2);
 
         Trail trail1 = new Trail(1930L, "Hello", routelist);
-        trail1.getStops().add(route4);
+        trail1.addRoute_stops(route3, route4);
+
+        System.out.println(trail1.toString());
 
 
         }
