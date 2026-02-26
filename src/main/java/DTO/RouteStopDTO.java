@@ -1,3 +1,5 @@
+package DTO;
+
 public class RouteStopDTO {
     // Fields
     private String route_name;

@@ -1,3 +1,5 @@
+package tables;
+
 import java.util.ArrayList;
 
 public class Trail {
@@ -54,7 +56,7 @@ public class Trail {
 
     @Override
     public String toString() {
-        return "Trail{" +
+        return "tables.Trail{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +

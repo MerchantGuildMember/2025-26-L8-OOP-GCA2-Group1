@@ -1,3 +1,7 @@
+import tables.Location;
+import tables.RouteStop;
+import tables.Trail;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
