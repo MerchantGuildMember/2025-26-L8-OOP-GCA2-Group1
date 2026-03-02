@@ -1,5 +1,7 @@
 package DTO;
 
+import tables.RouteStop;
+
 import java.util.ArrayList;
 
 public class TrailDTO {
