@@ -5,7 +5,7 @@ import tables.Location;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public interface LocationDao {
+public interface LocationDAO {
     int insert(double latitude, double longitude) throws Exception;
 
     Optional<Location> findById(Long id) throws Exception;

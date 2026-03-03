@@ -6,12 +6,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class JdbcLocationDao implements LocationDao {
+public class JdbcLocationDAO implements LocationDAO {
     private String _url;
     private String _user;
     private String _pass;
 
-    public JdbcLocationDao(String url, String user, String pass) {
+    public JdbcLocationDAO(String url, String user, String pass) {
         if(url == null || url.isBlank())
             throw new IllegalArgumentException("url is required");
         _url = url.trim();
