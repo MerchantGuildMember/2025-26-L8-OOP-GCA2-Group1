@@ -18,6 +18,8 @@ public class TrailMedia {
 
     public TrailMedia(Long id, Long trail_id, Long stop_id, String media_type, String url, String caption, LocalDateTime creation_time) {
         if(id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+        if(trail_id < 0) {throw new IllegalArgumentException("id must be >= 0");}
+        if(url == null) {throw new IllegalArgumentException("url must not be null");}
 
         this.id = id;
         this.trail_id = trail_id;
