@@ -4,7 +4,9 @@ import tables.Location;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class JdbcLocationDAO implements LocationDAO {
     private String _url;
@@ -12,7 +14,7 @@ public class JdbcLocationDAO implements LocationDAO {
     private String _pass;
 
     public JdbcLocationDAO(String url, String user, String pass) {
-        if(url == null || url.isBlank())
+        if (url == null || url.isBlank())
             throw new IllegalArgumentException("url is required");
         _url = url.trim();
         _user = user;
@@ -23,42 +25,37 @@ public class JdbcLocationDAO implements LocationDAO {
         return DriverManager.getConnection(_url, _user, _pass);
     }
 
+
     @Override
-    public int insert(double latitude, double longitude) throws Exception {
+    public ArrayList<Location> findAll() throws Exception {
+        String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location ORDER BY id";
 
-        String sql = "INSERT INTO location(latitude, longitude) VALUES (?,?)";
+        try (Connection c = open();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-        try(Connection c = open();
-            PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-         ps.setDouble(1, latitude);
-         ps.setDouble(2,longitude);
-
-         int rows = ps.executeUpdate();
-         if(rows != 1)
-             throw new IllegalStateException("insert failed, rows=" + rows);
-
-         try(ResultSet keys = ps.getGeneratedKeys()) {
-             if(!keys.next())
-                 throw new IllegalStateException("no generated key returned");
-             return keys.getInt(1);
-         }
+            ArrayList<Location> out = new ArrayList<>();
+            while (rs.next())
+                out.add(mapRow(rs));
+            return out;
         }
+
     }
 
     @Override
     public Optional<Location> findById(Long id) throws Exception {
-        if(id <= 0)
+        if (id <= 0 || id == null)
             return Optional.empty();
 
-        String sql = "SELECT id, longitude, latitude FROM location WHERE id = ?";
+        String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location WHERE id = ?";
 
-        try(Connection c = open();
-            PreparedStatement ps = c.prepareStatement(sql)) {
+        try (Connection c = open();
+             PreparedStatement ps = c.prepareStatement(sql)) {
 
-            ps.setLong(1,id);
+            ps.setLong(1, id);
 
-            try(ResultSet rs = ps.executeQuery()) {
-                if(!rs.next())
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next())
                     return Optional.empty();
                 return Optional.of(mapRow(rs));
             }
@@ -66,61 +63,78 @@ public class JdbcLocationDAO implements LocationDAO {
     }
 
     @Override
-    public ArrayList<Location> findAll() throws Exception {
-        String sql = "SELECT id, latitude, longitude FROM location ORDER BY id";
-
-        try(Connection c = open();
-            PreparedStatement ps = c.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
-
-            ArrayList<Location> out = new ArrayList<>();
-            while(rs.next());
-                out.add(mapRow(rs));
-            return out;
-        }
-
-    }
-    @Override
-    public boolean updateStatus(int id, String newStatus) throws Exception {
+    public boolean deleteById(Long id) throws Exception {
         if (id <= 0)
             return false;
 
-        if (newStatus == null || newStatus.isBlank())
-            throw new IllegalArgumentException("newStatus is required");
-
-        String sql = "UPDATE tasks SET status = ? WHERE id = ?";
+        String sql = "DELETE FROM location WHERE id = ?";
 
         try (Connection c = open();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
-            ps.setString(1, newStatus.trim().toUpperCase());
-            ps.setInt(2, id);
-
-            int rows = ps.executeUpdate();
-            return rows == 1;
-        }
-    }
-
-    @Override
-    public boolean deleteById(int id) throws Exception {
-        if (id <= 0)
-            return false;
-
-        String sql = "DELETE FROM tasks WHERE id = ?";
-
-        try (Connection c = open();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
+            ps.setLong(1, id);
             return ps.executeUpdate() == 1;
         }
+    }
+
+    @Override
+    public Location insert(Location location) throws Exception {
+
+        String sql = "INSERT INTO location(latitude, longitude, full_address, created_at) VALUES (?,?,?,?)";
+
+        try (Connection c = open();
+             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setDouble(1, location.getLatitude());
+            ps.setDouble(2, location.getLongitude());
+            ps.setString(3, location.getFullAddress());
+            ps.setTimestamp(4, Timestamp.valueOf(location.getCreationTime()));
+
+            int rows = ps.executeUpdate();
+            if (rows != 1)
+                throw new IllegalStateException("insert failed, rows=" + rows);
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (!keys.next())
+                    throw new IllegalStateException("no generated key returned");
+                location.setId(keys.getLong(1));
+                return location;
+            }
+        }
+    }
+
+
+    @Override
+    public Location update(Location location) throws Exception {
+        String sql = "UPDATE location SET latitude=?, longitude=?, full_address=?, created_at=? WHERE id=?";
+
+        try (Connection c = open();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setDouble(1, location.getLatitude());
+            ps.setDouble(2,location.getLongitude());
+            ps.setString(3,location.getFullAddress());
+            ps.setTimestamp(4,Timestamp.valueOf(location.getCreationTime()));
+
+            int rows = ps.executeUpdate();
+            if(rows == 0) {
+                throw new IllegalStateException("update failed, rows=" + rows);
+            }
+            return location;
+        }
+    }
+
+    @Override
+    public List<Location> findByFilter(java.util.function.Predicate<Location> filter) throws Exception {
+        return findAll().stream().filter(filter).collect(java.util.stream.Collectors.toList());
     }
 
     private static Location mapRow(ResultSet rs) throws SQLException {
         Long id = rs.getLong("id");
         double latitude = rs.getDouble("latitude");
         double longitude = rs.getDouble("longitude");
-        return new Location(id, latitude, longitude, LocalDateTime.now());
+        String fullAddress = rs.getString("full_address");
+        LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
+        return new Location(id, latitude, longitude, fullAddress, createdAt);
     }
 
 
