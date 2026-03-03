@@ -2,6 +2,14 @@ package tables;
 
 import java.time.LocalDateTime;
 
+/**
+ * RouteStop class for temporary breaks in trails
+ *
+ * @author Aleksy Cieslak
+ *
+ *
+ */
+
 public class RouteStop {
     // Fields
     private Long id;

@@ -2,6 +2,15 @@ package tables;
 
 import java.time.LocalDateTime;
 
+/**
+ * Trail Media class for holding images attained from these trips
+ * Gives information about the image and its location
+ *
+ * @author Aleksy Cieslak
+ *
+ *
+ */
+
 
 public class TrailMedia {
     // Fields

@@ -2,6 +2,14 @@ package tables;
 
 import java.util.ArrayList;
 
+/**
+ * Trail Class
+ *  holds id, name, trail difficulty, its estimated time and the amount of stops
+ *
+ * @author Aleksy Cieslak
+ *
+ */
+
 public class Trail {
     // Fields
     private Long id;

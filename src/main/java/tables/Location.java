@@ -2,6 +2,14 @@ package tables;
 
 import java.time.LocalDateTime;
 
+/**
+ * Location class, the heart of it all. Gives information about where the user would be, where trail stops are, where trails start and finish etc
+ *
+ * @author Aleksy Cieslak
+ *
+ *
+ */
+
 public class Location {
 
     // Fields
