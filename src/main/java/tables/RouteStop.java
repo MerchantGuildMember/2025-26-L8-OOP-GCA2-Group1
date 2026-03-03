@@ -38,6 +38,7 @@ public class RouteStop {
     public Long getId() {return id;}
     public String getRoute_name() {return route_name;}
     public Location getLocation() {return location;}
+    public LocalDateTime getCreated_at() {return created_at;}
 
     // Setters
     public void setId(Long id) {this.id = id;}

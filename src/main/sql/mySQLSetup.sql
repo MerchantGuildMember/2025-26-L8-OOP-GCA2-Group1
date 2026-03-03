@@ -3,7 +3,8 @@ CREATE DATABASE oop_gca2;
 USE oop_gca2;
 
 -- user account, if not confirmed / confirm if it works
-CREATE USER 'OOP_gca2_user'@'localhost' IDENTIFIED BY 'one';
+CREATE USER IF NOT EXISTS 'OOP_gca2_user'@'localhost' IDENTIFIED BY 'one';
+ALTER USER 'OOP_gca2_user'@'localhost' IDENTIFIED BY 'one';
 
 GRANT ALL PRIVILEGES ON *.* TO 'OOP_gca2_user'@'localhost'
     REQUIRE NONE
@@ -42,6 +43,7 @@ CREATE TABLE location (
  CREATE TABLE trail_stop (
      trail_id INT NOT NULL,
      stop_id INT NOT NULL,
+     stop_order INT NOT NULL,
      PRIMARY KEY (trail_id, stop_id),
      FOREIGN KEY (trail_id) REFERENCES trail(id),
      FOREIGN KEY (stop_id) REFERENCES route_stop(id)
@@ -97,17 +99,17 @@ INSERT INTO trail (name, description, difficulty, estimated_time) VALUES
 ('Dingle Peninsula Walk', 'Coastal views and ancient sites', 'Moderate', 3.5),
 ('Slieve League Cliff Path', 'Europe''s highest sea cliffs', 'Hard', 4.0);
 
-INSERT INTO trail_stop (trail_id, stop_id) VALUES
-(1, 3),  -- Wild Atlantic Way: Spanish Arch
-(1, 7),  -- Wild Atlantic Way: O'Brien's Tower
-(1, 9),  -- Wild Atlantic Way: Dingle Marina
-(2, 1),  -- Ancient East: Trinity College
-(2, 5),  -- Ancient East: Reginald's Tower
-(3, 2),  -- Munster Highlights: English Market
-(3, 6),  -- Munster Highlights: Muckross House
-(4, 4),  -- West Coast Castles: King John's Castle
-(4, 8),  -- West Coast Castles: Westport House
-(5, 10); -- North West Adventure: Benbulben
+INSERT INTO trail_stop (trail_id, stop_id, stop_order) VALUES
+(1, 3, 1),
+(1, 7, 2),
+(1, 9, 3),
+(2, 1, 1),
+(2, 5, 2),
+(3, 2, 1),
+(3, 6, 2),
+(4, 4, 1),
+(4, 8, 2),
+(5, 10, 1);
 
 INSERT INTO trail_media (trail_id, stop_id, media_type, url, caption, creation_time) VALUES
 (1, 3, 'IMAGE', 'http://example.com/ireland/spanish_arch.jpg', 'Spanish Arch, Galway', '2023-01-17 10:00:00'),

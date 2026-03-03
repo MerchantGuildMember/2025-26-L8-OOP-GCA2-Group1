@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class JdbcLocationDAO implements LocationDAO {
@@ -44,7 +45,7 @@ public class JdbcLocationDAO implements LocationDAO {
 
     @Override
     public Optional<Location> findById(Long id) throws Exception {
-        if (id <= 0 || id == null)
+        if (id == null || id <= 0)
             return Optional.empty();
 
         String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location WHERE id = ?";
@@ -64,7 +65,7 @@ public class JdbcLocationDAO implements LocationDAO {
 
     @Override
     public boolean deleteById(Long id) throws Exception {
-        if (id <= 0)
+        if (id == null || id <= 0)
             return false;
 
         String sql = "DELETE FROM location WHERE id = ?";
@@ -114,6 +115,7 @@ public class JdbcLocationDAO implements LocationDAO {
             ps.setDouble(2,location.getLongitude());
             ps.setString(3,location.getFullAddress());
             ps.setTimestamp(4,Timestamp.valueOf(location.getCreationTime()));
+            ps.setLong(5, location.getId());
 
             int rows = ps.executeUpdate();
             if(rows == 0) {
@@ -124,8 +126,8 @@ public class JdbcLocationDAO implements LocationDAO {
     }
 
     @Override
-    public List<Location> findByFilter(java.util.function.Predicate<Location> filter) throws Exception {
-        return findAll().stream().filter(filter).collect(java.util.stream.Collectors.toList());
+    public List<Location> findByFilter(Predicate<Location> filter) throws Exception {
+        return findAll().stream().filter(filter).collect(Collectors.toList());
     }
 
     private static Location mapRow(ResultSet rs) throws SQLException {

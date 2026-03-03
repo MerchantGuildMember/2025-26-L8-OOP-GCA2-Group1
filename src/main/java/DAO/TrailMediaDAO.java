@@ -3,17 +3,30 @@ package DAO;
 import tables.TrailMedia;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public interface TrailMediaDAO {
-    int insert(double latitude, double longitude) throws Exception;
-
-    Optional<TrailMedia> findById(Long id) throws Exception;
+    // F3 Get All Entities
     ArrayList<TrailMedia> findAll() throws Exception;
 
+    // F4 Get by ID
+    Optional<TrailMedia> findById(Long id) throws Exception;
 
-    boolean updateStatus(int id, String newStatus) throws Exception;
+    // F5 Delete By ID
+    boolean deleteById(Long id) throws Exception;
 
-    boolean deleteById(int id) throws Exception;
+    // F6 Insert Entity
+    TrailMedia insert(TrailMedia location) throws Exception;
+
+    // F7 Update Entity
+    TrailMedia update(TrailMedia location) throws Exception;
+
+    // F8 Filter with predicate
+    List<TrailMedia> findByFilter(java.util.function.Predicate<TrailMedia> filter) throws Exception;
+
+    // F9 JSON conversion
+
+
 }
 
