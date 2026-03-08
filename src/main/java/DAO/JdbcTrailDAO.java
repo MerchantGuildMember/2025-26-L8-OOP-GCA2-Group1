@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import utils.JsonUtil;
 
 public class JdbcTrailDAO implements TrailDAO {
     private String _url;
@@ -222,5 +223,20 @@ public class JdbcTrailDAO implements TrailDAO {
             }
         }
         return stops;
+    }
+
+    @Override
+    public String trailToJson(Trail trail) {
+        return JsonUtil.toJson(trail);
+    }
+
+    @Override
+    public Trail trailFromJson(String json) {
+        return JsonUtil.fromJson(json, Trail.class);
+    }
+
+    @Override
+    public String trailListToJson(List<Trail> trails) {
+        return JsonUtil.listToJson(trails);
     }
 }

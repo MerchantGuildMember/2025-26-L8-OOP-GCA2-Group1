@@ -26,6 +26,11 @@ public interface TrailMediaDAO {
     List<TrailMedia> findByFilter(java.util.function.Predicate<TrailMedia> filter) throws Exception;
 
     // F9 JSON conversion
+    String trailMediaToJson(TrailMedia trailMedia);
+
+    TrailMedia trailMediaFromJson(String json);
+
+    String trailMediaListToJson(List<TrailMedia> trailMediaList);
 
 
 }

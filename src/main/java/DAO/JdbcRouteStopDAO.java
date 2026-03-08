@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import utils.JsonUtil;
+
 
 public class JdbcRouteStopDAO implements RouteStopDAO {
     private String _url;
@@ -150,6 +152,21 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
                 location,
                 rs.getTimestamp("created_at").toLocalDateTime()
         );
+    }
+
+    @Override
+    public String routeStopToJson(RouteStop routeStop) {
+        return JsonUtil.toJson(routeStop);
+    }
+
+    @Override
+    public RouteStop routeStopFromJson(String json) {
+        return JsonUtil.fromJson(json, RouteStop.class);
+    }
+
+    @Override
+    public String routeStopListToJson(List<RouteStop> routeStops) {
+        return JsonUtil.listToJson(routeStops);
     }
 
 

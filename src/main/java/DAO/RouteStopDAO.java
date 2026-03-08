@@ -27,6 +27,12 @@ public interface RouteStopDAO {
 
     // F9 JSON conversion
 
+    String routeStopToJson(RouteStop routeStop);
+
+    RouteStop routeStopFromJson(String json);
+
+    String routeStopListToJson(List<RouteStop> routeStops);
+
 
 }
 

@@ -27,6 +27,13 @@ public interface TrailDAO {
 
     // F9 JSON conversion
 
+    String trailToJson(Trail trail);
 
+    Trail trailFromJson(String json);
+
+    String trailListToJson(List<Trail> trails);
 }
+
+
+
 

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import utils.JsonUtil;
 
 public class JdbcLocationDAO implements LocationDAO {
     private String _url;
@@ -137,6 +138,21 @@ public class JdbcLocationDAO implements LocationDAO {
         String fullAddress = rs.getString("full_address");
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
         return new Location(id, latitude, longitude, fullAddress, createdAt);
+    }
+
+    @Override
+    public String locationToJson(Location location) {
+        return JsonUtil.toJson(location);
+    }
+
+    @Override
+    public Location locationFromJson(String json) {
+        return JsonUtil.fromJson(json, Location.class);
+    }
+
+    @Override
+    public String locationListToJson(List<Location> locations) {
+        return JsonUtil.listToJson(locations);
     }
 
 
