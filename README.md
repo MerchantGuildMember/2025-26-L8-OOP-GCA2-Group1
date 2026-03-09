@@ -37,3 +37,32 @@
 ### 2.1 Database setup
 1. Import file called 'setup.sql' into phpmyadmin
 2. Verify it's connected by running DbSmokeTest
+
+# Architecture Diagram
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '16px'}}}%%
+graph TD
+    Client["Client<br/>(Console / Test class)"] -->|"1. JSON Request"| Server["Server<br/>(Java Application)"]
+
+    subgraph Server_Internals [Server Internals]
+        Server -->|"2. invoke"| Service["Service Layer<br/>(business logic)"]
+        Service -->|"3. call"| DAO["DAO Interface<br/>(e.g., LocationDAO)"]
+        DAO -->|"4. execute SQL"| JDBC["JDBC Implementation<br/>(JdbcLocationDAO, etc.)"]
+        JDBC -->|"5. return DTOs"| DAO
+        DAO -->|"6. return DTOs"| Service
+        Service -->|"7. return DTOs"| Server
+    end
+
+    JDBC -->|"SQL over JDBC"| Database[("MySQL Database<br/>(schema + seed data)")]
+    Database -->|"ResultSet"| JDBC
+
+    Server -->|"8. JSON Response"| Client
+
+    style Client fill:#e1f5fe,stroke:#01579b
+    style Server fill:#fff3e0,stroke:#e65100
+    style Service fill:#e8f5e8,stroke:#1b5e20
+    style DAO fill:#fff9c4,stroke:#fbc02d
+    style JDBC fill:#ffccbc,stroke:#bf360c
+    style Database fill:#e1d5e7,stroke:#4a148c
+```
