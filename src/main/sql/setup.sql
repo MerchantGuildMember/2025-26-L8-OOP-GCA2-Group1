@@ -3,10 +3,10 @@ CREATE DATABASE oop_gca2;
 USE oop_gca2;
 
 -- user account, if not confirmed / confirm if it works
-CREATE USER IF NOT EXISTS 'OOP_gca2_user'@'localhost' IDENTIFIED BY 'one';
-ALTER USER 'OOP_gca2_user'@'localhost' IDENTIFIED BY 'one';
+CREATE USER IF NOT EXISTS 'oop_gca2_user'@'localhost' IDENTIFIED BY 'one';
+ALTER USER 'oop_gca2_user'@'localhost' IDENTIFIED BY 'one';
 
-GRANT ALL PRIVILEGES ON *.* TO 'OOP_gca2_user'@'localhost'
+GRANT ALL PRIVILEGES ON *.* TO 'oop_gca2_user'@'localhost'
     REQUIRE NONE
     WITH GRANT OPTION
     MAX_QUERIES_PER_HOUR 0
@@ -14,7 +14,7 @@ GRANT ALL PRIVILEGES ON *.* TO 'OOP_gca2_user'@'localhost'
     MAX_UPDATES_PER_HOUR 0
     MAX_USER_CONNECTIONS 0;
 
-GRANT ALL PRIVILEGES ON `OOP\_gca2`.* TO 'OOP_gca2_user'@'localhost';
+GRANT ALL PRIVILEGES ON `oop_gca2`.* TO 'oop_gca2_user'@'localhost';
 
 CREATE TABLE location (
      id INT AUTO_INCREMENT PRIMARY KEY,

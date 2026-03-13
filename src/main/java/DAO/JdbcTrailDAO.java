@@ -2,10 +2,8 @@ package DAO;
 import tables.Location;
 import tables.RouteStop;
 import tables.Trail;
-import tables.TrailMedia;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -77,21 +75,21 @@ public class JdbcTrailDAO implements TrailDAO {
                 psTrail.setLong(1, id);
                 return psTrail.executeUpdate() == 1;
             }
+        } catch (SQLException e) {
+            System.err.println("Database error during trail delete: " + e.getMessage());
+            throw new RuntimeException("Error deleting trail", e);
         }
     }
 
     @Override
     public Trail insert(Trail trail) throws Exception {
-        Connection c = null;
-        PreparedStatement psTrail = null;
-        PreparedStatement psStop = null;
-        ResultSet keys = null;
-        try {
-            c = open();
+        try (Connection c = open();
+             PreparedStatement psTrail = c.prepareStatement(
+                     "INSERT INTO trail (name, description, difficulty, estimated_time) VALUES (?, ?, ?, ?)",
+                     Statement.RETURN_GENERATED_KEYS)) {
+
             c.setAutoCommit(false);
 
-            String sqlTrail = "INSERT INTO trail (name, description, difficulty, estimated_time) VALUES (?, ?, ?, ?)";
-            psTrail = c.prepareStatement(sqlTrail, Statement.RETURN_GENERATED_KEYS);
             psTrail.setString(1, trail.getName());
             psTrail.setString(2, trail.getDescription());
             psTrail.setString(3, trail.getDifficulty());
@@ -100,38 +98,32 @@ public class JdbcTrailDAO implements TrailDAO {
             int rows = psTrail.executeUpdate();
             if (rows != 1) throw new IllegalStateException("insert failed, rows=" + rows);
 
-            keys = psTrail.getGeneratedKeys();
-            if (!keys.next()) throw new IllegalStateException("no generated key returned");
-            Long trailId = keys.getLong(1);
-            trail.setId(trailId);
+            try(ResultSet keys = psTrail.getGeneratedKeys()){
+                if (!keys.next()) throw new IllegalStateException("no generated key returned");
+                trail.setId(keys.getLong(1));
+            }
 
             List<RouteStop> stops = trail.getStops();
             if (stops != null && !stops.isEmpty()) {
-                String sqlStop = "INSERT INTO trail_stop (trail_id, stop_id, stop_order) VALUES (?, ?, ?)";
-                psStop = c.prepareStatement(sqlStop);
-                int order = 1;
-                for (RouteStop stop : stops) {
-                    psStop.setLong(1, trailId);
-                    psStop.setLong(2, stop.getId());
-                    psStop.setInt(3, order++);
-                    psStop.addBatch();
+                try(PreparedStatement psStop = c.prepareStatement(
+                        "INSERT INTO trail_stop (trail_id, stop_id, stop_order) VALUES (?, ?, ?)")) {
+                    int order = 1;
+
+                    for (RouteStop stop : stops) {
+                        psStop.setLong(1, trail.getId());
+                        psStop.setLong(2, stop.getId());
+                        psStop.setInt(3, order++);
+                        psStop.addBatch();
+                    }
+                    psStop.executeBatch();
                 }
-                psStop.executeBatch();
             }
 
             c.commit();
             return trail;
         } catch (SQLException e) {
-            if (c != null) try {
-                c.rollback();
-            } catch (SQLException ex) {
-            }
-            throw new RuntimeException("error inserting trail", e);
-        } finally {
-            if (keys != null) try { keys.close(); } catch (SQLException e) {}
-            if (psStop != null) try { psStop.close(); } catch (SQLException e) {}
-            if (psTrail != null) try { psTrail.close(); } catch (SQLException e) {}
-            if (c != null) try { c.setAutoCommit(true); c.close(); } catch (SQLException e) {}
+            System.err.println("Database error during trail insert: " + e.getMessage());
+            throw new RuntimeException("Error inserting trail", e);
         }
     }
 
@@ -207,8 +199,8 @@ public class JdbcTrailDAO implements TrailDAO {
                 while (rs.next()) {
                     Location loc = new Location(
                             rs.getLong("loc_id"),
-                            rs.getDouble("latitude"),
-                            rs.getDouble("longitude"),
+                            rs.getBigDecimal("latitude"),
+                            rs.getBigDecimal("longitude"),
                             rs.getString("full_address"),
                             rs.getTimestamp("loc_created_at").toLocalDateTime()
                     );
