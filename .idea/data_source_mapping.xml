@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/src/main/java/DAO/JdbcTrailDAO.java" value="3844eef4-3936-45c4-8903-dd01586d3a5c" />
-    <file url="file://$PROJECT_DIR$/src/main/sql/mySQLSetup.sql" value="3844eef4-3936-45c4-8903-dd01586d3a5c" />
-  </component>
-</project>

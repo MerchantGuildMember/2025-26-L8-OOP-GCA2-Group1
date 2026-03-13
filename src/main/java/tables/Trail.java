@@ -76,8 +76,8 @@ public class Trail {
 
     // add more
     public void addRoute_stops(RouteStop... args) {
-        for (int i = 0; i < args.length; i++) {
-            getStops().add(args[i]);
+        for (RouteStop arg : args) {
+            getStops().add(arg);
         }
     }
 

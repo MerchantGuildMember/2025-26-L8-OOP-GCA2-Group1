@@ -140,8 +140,8 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
     private RouteStop mapRow(ResultSet rs) throws SQLException {
         Location location = new Location(
                 rs.getLong("loc_id"),
-                rs.getDouble("latitude"),
-                rs.getDouble("longitude"),
+                rs.getBigDecimal("latitude"),
+                rs.getBigDecimal("longitude"),
                 rs.getString("full_address"),
                 rs.getTimestamp("loc_created_at").toLocalDateTime()
         );

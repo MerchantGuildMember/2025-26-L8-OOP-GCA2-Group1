@@ -1,6 +1,7 @@
 package DAO;
 import tables.Location;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -86,8 +87,8 @@ public class JdbcLocationDAO implements LocationDAO {
 
         try (Connection c = open();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setDouble(1, location.getLatitude());
-            ps.setDouble(2, location.getLongitude());
+            ps.setBigDecimal(1, location.getLatitude());
+            ps.setBigDecimal(2, location.getLongitude());
             ps.setString(3, location.getFullAddress());
             ps.setTimestamp(4, Timestamp.valueOf(location.getCreationTime()));
 
@@ -112,8 +113,8 @@ public class JdbcLocationDAO implements LocationDAO {
         try (Connection c = open();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
-            ps.setDouble(1, location.getLatitude());
-            ps.setDouble(2,location.getLongitude());
+            ps.setBigDecimal(1, location.getLatitude());
+            ps.setBigDecimal(2, location.getLongitude());
             ps.setString(3,location.getFullAddress());
             ps.setTimestamp(4,Timestamp.valueOf(location.getCreationTime()));
             ps.setLong(5, location.getId());
@@ -133,8 +134,8 @@ public class JdbcLocationDAO implements LocationDAO {
 
     private static Location mapRow(ResultSet rs) throws SQLException {
         Long id = rs.getLong("id");
-        double latitude = rs.getDouble("latitude");
-        double longitude = rs.getDouble("longitude");
+        BigDecimal latitude = rs.getBigDecimal("latitude");
+        BigDecimal longitude = rs.getBigDecimal("longitude");
         String fullAddress = rs.getString("full_address");
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
         return new Location(id, latitude, longitude, fullAddress, createdAt);
