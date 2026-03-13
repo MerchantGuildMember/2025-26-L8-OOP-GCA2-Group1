@@ -122,32 +122,21 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
         return findAll().stream().filter(filter).collect(Collectors.toList());
     }
 
-    /* private TrailMedia mapRow(ResultSet rs) throws SQLException {
+    private TrailMedia mapRow(ResultSet rs) throws SQLException {
         Long id = rs.getLong("id");
         Long trail_id = rs.getLong("trail_id");
         Long stop_id = rs.getLong("stop_id");
+
+        // Maryna's addition
+        if (rs.wasNull()) {
+            stop_id = null;
+        }
+
         String media_type = rs.getString("media_type");
         String url = rs.getString("url");
         String caption = rs.getString("caption");
         LocalDateTime creation_time = rs.getTimestamp("creation_time").toLocalDateTime();
         return new TrailMedia(id, trail_id, stop_id, media_type, url, caption, creation_time);
-    }
-} */
-    private TrailMedia mapRow(ResultSet rs) throws SQLException {
-        Long id = rs.getLong("id");
-        Long trailId = rs.getLong("trail_id");
-
-        Long stopId = rs.getLong("stop_id");
-        if (rs.wasNull()) {
-            stopId = null;
-        }
-
-        String mediaType = rs.getString("media_type");
-        String url = rs.getString("url");
-        String caption = rs.getString("caption");
-        LocalDateTime creationTime = rs.getTimestamp("creation_time").toLocalDateTime();
-
-        return new TrailMedia(id, trailId, stopId, mediaType, url, caption, creationTime);
     }
 
     @Override
