@@ -27,11 +27,11 @@ public interface TrailDAO {
 
     // F9 JSON conversion
 
-    String trailToJson(Trail trail);
+    String trailToJson(Trail trail) throws Exception;
 
-    Trail trailFromJson(String json);
+    Trail trailFromJson(String json) throws Exception;
 
-    String trailListToJson(List<Trail> trails);
+    String trailListToJson(List<Trail> trails) throws Exception;
 }
 
 

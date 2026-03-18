@@ -19,20 +19,43 @@ public class TrailMediaDTO {
         this.creation_time = creation_time;
     }
 
-    public TrailMediaDTO() {}
+    public TrailMediaDTO() {
+    }
 
     // Getters
-    public String getMedia_type() {return media_type;}
-    public String getUrl() {return url;}
-    public String getCaption() {return caption;}
-    public LocalDateTime getCreation_time() {return creation_time;}
+    public String getMedia_type() {
+        return media_type;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getCaption() {
+        return caption;
+    }
+
+    public LocalDateTime getCreation_time() {
+        return creation_time;
+    }
 
 
     // Setters
-    public void setMedia_type(String media_type) {this.media_type = media_type;}
-    public void setUrl(String url) {this.url = url;}
-    public void setCaption(String caption) {this.caption = caption;}
-    public void setCreation_time(LocalDateTime creation_time) {this.creation_time = creation_time;}
+    public void setMedia_type(String media_type) {
+        this.media_type = media_type;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setCaption(String caption) {
+        this.caption = caption;
+    }
+
+    public void setCreation_time(LocalDateTime creation_time) {
+        this.creation_time = creation_time;
+    }
 
 
 }

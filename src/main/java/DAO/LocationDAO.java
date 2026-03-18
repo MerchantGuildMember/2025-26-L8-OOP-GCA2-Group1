@@ -26,11 +26,11 @@ public interface LocationDAO {
     List<Location> findByFilter(java.util.function.Predicate<Location> filter) throws Exception;
 
     // F9 JSON conversion
-    String locationToJson(Location location);
+    String locationToJson(Location location) throws Exception;
 
-    Location locationFromJson(String json);
+    Location locationFromJson(String json) throws Exception;
 
-    String locationListToJson(List<Location> locations);
+    String locationListToJson(List<Location> locations)throws Exception;
 
 
 }
