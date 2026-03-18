@@ -20,19 +20,36 @@ public class LocationDTO {
         this.full_address = full_address;
     }
 
-    public LocationDTO() {}
+    public LocationDTO() {
+    }
 
 
     // Getters
-    public double getLatitude() {return latitude;}
-    public double getLongitude() {return longitude;}
-    public String getFullAddress() {return full_address;}
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public String getFullAddress() {
+        return full_address;
+    }
 
 
     // Setters
-    public void setLatitude(double lat) {this.latitude = lat;}
-    public void setLongitude(double lon) {this.longitude = lon;}
-    public void setFullAddress(String full_address) {this.full_address = full_address;}
+    public void setLatitude(double lat) {
+        this.latitude = lat;
+    }
+
+    public void setLongitude(double lon) {
+        this.longitude = lon;
+    }
+
+    public void setFullAddress(String full_address) {
+        this.full_address = full_address;
+    }
 }
 
 

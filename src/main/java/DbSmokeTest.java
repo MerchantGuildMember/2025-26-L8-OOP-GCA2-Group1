@@ -3,13 +3,17 @@ import tables.Location;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static utils.JsonUtil.listToJson;
 
 public class DbSmokeTest {
 
     public static void main(String[] args) {
 
         String url = "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-        String user = "oop_gca2_user";
+        String user = "oop_gca2";
         String pass = "one";
 
         JdbcLocationDAO dao = new JdbcLocationDAO(url, user, pass);
@@ -49,9 +53,28 @@ public class DbSmokeTest {
             dao.findByFilter(location -> location.getLatitude().compareTo(new BigDecimal("40")) > 0)
                     .forEach(location -> System.out.println(location.getLatitude()));
 
+            // 7. Test JSON Conversion (F9)
+            System.out.println("JSON Conversion Test");
+            String json = dao.locationToJson(newLoc);
+            System.out.println("Converted location to JSON: " + json);
+
+            Location location = dao.locationFromJson(json);
+            System.out.println("Converted JSON to location: " + location);
+            Location newLoc1 = new Location(null,
+                    92.3497, 5.2603,
+                    "Drogheda, New Bridge", LocalDateTime.now());
+
+            Location newLoc2 = new Location(null,
+                    33.3497, 6.2203,
+                    "Dundalk Train Station", LocalDateTime.now());
+
+            List<Location> locations = new ArrayList<>();
+            locations.add(newLoc);
+            locations.add(newLoc1);
+            locations.add(newLoc2);
+            System.out.println("Converted List<Location> to JSON: " + listToJson(locations));
         } catch (Exception e) {
-            System.out.println("helolo");
-            e.printStackTrace();
+            System.out.println("Error while testing: " + e.getMessage());
         }
     }
 }

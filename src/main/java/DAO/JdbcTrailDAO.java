@@ -1,4 +1,5 @@
 package DAO;
+
 import tables.Location;
 import tables.RouteStop;
 import tables.Trail;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import utils.JsonUtil;
 
 public class JdbcTrailDAO implements TrailDAO {
@@ -19,7 +21,7 @@ public class JdbcTrailDAO implements TrailDAO {
     public JdbcTrailDAO(String url, String user, String pass) {
         if (url == null || url.isBlank())
             throw new IllegalArgumentException("url is required");
-        _url = url.trim();
+        _url = url;
         _user = user;
         _pass = pass;
     }
@@ -98,14 +100,14 @@ public class JdbcTrailDAO implements TrailDAO {
             int rows = psTrail.executeUpdate();
             if (rows != 1) throw new IllegalStateException("insert failed, rows=" + rows);
 
-            try(ResultSet keys = psTrail.getGeneratedKeys()){
+            try (ResultSet keys = psTrail.getGeneratedKeys()) {
                 if (!keys.next()) throw new IllegalStateException("no generated key returned");
                 trail.setId(keys.getLong(1));
             }
 
             List<RouteStop> stops = trail.getStops();
             if (stops != null && !stops.isEmpty()) {
-                try(PreparedStatement psStop = c.prepareStatement(
+                try (PreparedStatement psStop = c.prepareStatement(
                         "INSERT INTO trail_stop (trail_id, stop_id, stop_order) VALUES (?, ?, ?)")) {
                     int order = 1;
 

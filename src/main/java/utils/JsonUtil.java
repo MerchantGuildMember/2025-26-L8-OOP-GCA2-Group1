@@ -1,15 +1,23 @@
 package utils;
 
+import com.google.gson.*;
 
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
+import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Util class for JSON Conversion
+ *
+ * @author Maryna Hordiienko
+ *
+ */
 public class JsonUtil {
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
+            .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) -> LocalDateTime.parse(json.getAsString()))
+            .setPrettyPrinting()
+            .create();
 
     public static <T> String toJson(T object) {
         return gson.toJson(object);

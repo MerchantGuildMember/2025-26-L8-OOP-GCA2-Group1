@@ -1,4 +1,5 @@
 package DAO;
+
 import tables.Location;
 import tables.RouteStop;
 
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import utils.JsonUtil;
 
 
@@ -19,7 +21,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
     public JdbcRouteStopDAO(String url, String user, String pass) {
         if (url == null || url.isBlank())
             throw new IllegalArgumentException("url is required");
-        _url = url.trim();
+        _url = url;
         _user = user;
         _pass = pass;
     }
@@ -125,7 +127,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
             ps.setLong(3, route_stop.getId());
 
             int rows = ps.executeUpdate();
-            if(rows == 0) {
+            if (rows == 0) {
                 throw new IllegalStateException("update failed, rows=" + rows);
             }
             return route_stop;

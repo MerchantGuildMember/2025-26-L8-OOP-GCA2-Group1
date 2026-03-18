@@ -1,4 +1,5 @@
 package DAO;
+
 import tables.TrailMedia;
 
 import java.sql.*;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import utils.JsonUtil;
 
 public class JdbcTrailMediaDAO implements TrailMediaDAO {
@@ -18,7 +20,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
     public JdbcTrailMediaDAO(String url, String user, String pass) {
         if (url == null || url.isBlank())
             throw new IllegalArgumentException("url is required");
-        _url = url.trim();
+        _url = url;
         _user = user;
         _pass = pass;
     }
