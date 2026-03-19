@@ -1,5 +1,8 @@
 import DAO.JdbcLocationDAO;
+import DAO.JdbcTrailDAO;
+import DAO.TrailDAO;
 import tables.Location;
+import tables.Trail;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -66,13 +69,20 @@ public class DbSmokeTest {
 
             Location newLoc2 = new Location(null,
                     33.3497, 6.2203,
-                    "Dundalk Train Station", LocalDateTime.now());
+                    "Dundalk, Train Station", LocalDateTime.now());
 
             List<Location> locations = new ArrayList<>();
             locations.add(newLoc);
             locations.add(newLoc1);
             locations.add(newLoc2);
             System.out.println("Converted List<Location> to JSON: " + listToJson(locations));
+
+            TrailDAO trailDAO =  new JdbcTrailDAO(url, user, pass);
+            List<Trail> trails = trailDAO.findAll();
+            for(Trail trail : trails){
+                System.out.println(trail.getId());
+            }
+
         } catch (Exception e) {
             System.out.println("Error while testing: " + e.getMessage());
         }
