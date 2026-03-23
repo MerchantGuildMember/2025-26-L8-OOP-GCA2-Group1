@@ -10,24 +10,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-// F10?
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import static utils.JsonUtil.listToJson;
 
 public class DbSmokeTest {
 
     public static void main(String[] args) throws Exception {
 
-        // declaring user details and the link to the database
-        String url = "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-        String user = "oop_gca2_user";
-        String pass = "one";
-
-        LocationDAO dao = new JdbcLocationDAO(url, user, pass);
-
-
+        LocationDAO dao = new JdbcLocationDAO(System.getenv("URL"), System.getenv("USER"), System.getenv("PASS"));
 
         Location newLoc = new Location(null,
                 53.3497, 6.2603,
@@ -87,8 +76,5 @@ public class DbSmokeTest {
             for(Trail trail : trails){
                 System.out.println(trail.getId());
             }
-
-        // kill thread pool dedicator
-//        fixed.shutdown();
     }
 }
