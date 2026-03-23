@@ -142,21 +142,9 @@ public class JdbcLocationDAO implements LocationDAO {
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
         return new Location(id, latitude, longitude, fullAddress, createdAt);
     }
-
     @Override
-    public String locationToJson(Location location) {
-        return JsonUtil.toJson(location);
-    }
-
-    @Override
-    public Location locationFromJson(String json) {
+    public Location entFromJson(String json) {
         return JsonUtil.fromJson(json, Location.class);
     }
-
-    @Override
-    public String locationListToJson(List<Location> locations) {
-        return JsonUtil.listToJson(locations);
-    }
-
 
 }

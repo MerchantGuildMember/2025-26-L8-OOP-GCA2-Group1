@@ -155,21 +155,9 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
                 rs.getTimestamp("created_at").toLocalDateTime()
         );
     }
-
     @Override
-    public String routeStopToJson(RouteStop routeStop) {
-        return JsonUtil.toJson(routeStop);
-    }
-
-    @Override
-    public RouteStop routeStopFromJson(String json) {
+    public RouteStop entFromJson(String json) {
         return JsonUtil.fromJson(json, RouteStop.class);
     }
-
-    @Override
-    public String routeStopListToJson(List<RouteStop> routeStops) {
-        return JsonUtil.listToJson(routeStops);
-    }
-
 
 }

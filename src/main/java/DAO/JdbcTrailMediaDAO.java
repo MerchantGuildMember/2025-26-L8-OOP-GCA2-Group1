@@ -140,20 +140,9 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
         LocalDateTime creation_time = rs.getTimestamp("creation_time").toLocalDateTime();
         return new TrailMedia(id, trail_id, stop_id, media_type, url, caption, creation_time);
     }
-
     @Override
-    public String trailMediaToJson(TrailMedia trailMedia) {
-        return JsonUtil.toJson(trailMedia);
-    }
-
-    @Override
-    public TrailMedia trailMediaFromJson(String json) {
+    public TrailMedia entFromJson(String json) {
         return JsonUtil.fromJson(json, TrailMedia.class);
-    }
-
-    @Override
-    public String trailMediaListToJson(List<TrailMedia> trailMediaList) {
-        return JsonUtil.listToJson(trailMediaList);
     }
 }
 

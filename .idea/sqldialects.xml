@@ -2,6 +2,7 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/src/main/java/DAO/JdbcRouteStopDAO.java" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/sql/setup.sql" dialect="MariaDB" />
     <file url="PROJECT" dialect="MySQL" />
   </component>
 </project>
