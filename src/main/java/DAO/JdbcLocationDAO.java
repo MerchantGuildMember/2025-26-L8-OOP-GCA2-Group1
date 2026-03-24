@@ -1,5 +1,6 @@
 package DAO;
 
+import shared.ServerResponse;
 import tables.Location;
 
 import java.math.BigDecimal;
@@ -7,7 +8,6 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -32,7 +32,7 @@ public class JdbcLocationDAO implements LocationDAO {
 
 
     @Override
-    public ArrayList<Location> findAll() throws Exception {
+    public ServerResponse<ArrayList<Location>> findAll() throws Exception { // MH
         String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location ORDER BY id";
 
         try (Connection c = open();
@@ -42,15 +42,15 @@ public class JdbcLocationDAO implements LocationDAO {
             ArrayList<Location> out = new ArrayList<>();
             while (rs.next())
                 out.add(mapRow(rs));
-            return out;
+            return new ServerResponse<>("Success", "Retrieved locations", out); // MH
         }
 
     }
 
     @Override
-    public Optional<Location> findById(Long id) throws Exception {
+    public ServerResponse<Location> findById(Long id) throws Exception { // MH
         if (id == null || id <= 0)
-            return Optional.empty();
+            return new ServerResponse<>("Error", "ID Error " + id, null); // MH
 
         String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location WHERE id = ?";
 
@@ -61,8 +61,8 @@ public class JdbcLocationDAO implements LocationDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next())
-                    return Optional.empty();
-                return Optional.of(mapRow(rs));
+                    return new ServerResponse<>("Error", "Location is not found ", null);  // MH
+                return new ServerResponse<>("Success", "Found location ", mapRow(rs));          // MH
             }
         }
     }
