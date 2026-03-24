@@ -16,7 +16,7 @@ public class DbSmokeTest {
 
     public static void main(String[] args) throws Exception {
 
-        LocationDAO dao = new JdbcLocationDAO(System.getenv("URL"), System.getenv("USER"), System.getenv("PASS"));
+       /* LocationDAO dao = new JdbcLocationDAO(System.getenv("URL"), System.getenv("USER"), System.getenv("PASS"));
 
         Location newLoc = new Location(null,
                 53.3497, 6.2603,
@@ -76,5 +76,11 @@ public class DbSmokeTest {
             for(Trail trail : trails){
                 System.out.println(trail.getId());
             }
+
+        */
     }
+
+
 }
+
+

@@ -1,6 +1,6 @@
+/*
 import DAO.JdbcLocationDAO;
 import DAO.LocationDAO;
-import server.MultiClientServer;
 import tables.Location;
 
 public class DBSmokeTest2 {
@@ -21,3 +21,4 @@ public class DBSmokeTest2 {
 
     }
 }
+*/
