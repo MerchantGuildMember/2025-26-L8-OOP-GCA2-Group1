@@ -1,4 +1,5 @@
 package DAO;
+
 import tables.TrailMedia;
 
 import java.sql.*;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import utils.JsonUtil;
 
 public class JdbcTrailMediaDAO implements TrailMediaDAO {
@@ -18,7 +20,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
     public JdbcTrailMediaDAO(String url, String user, String pass) {
         if (url == null || url.isBlank())
             throw new IllegalArgumentException("url is required");
-        _url = url.trim();
+        _url = url;
         _user = user;
         _pass = pass;
     }
@@ -138,20 +140,9 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
         LocalDateTime creation_time = rs.getTimestamp("creation_time").toLocalDateTime();
         return new TrailMedia(id, trail_id, stop_id, media_type, url, caption, creation_time);
     }
-
     @Override
-    public String trailMediaToJson(TrailMedia trailMedia) {
-        return JsonUtil.toJson(trailMedia);
-    }
-
-    @Override
-    public TrailMedia trailMediaFromJson(String json) {
+    public TrailMedia entFromJson(String json) {
         return JsonUtil.fromJson(json, TrailMedia.class);
-    }
-
-    @Override
-    public String trailMediaListToJson(List<TrailMedia> trailMediaList) {
-        return JsonUtil.listToJson(trailMediaList);
     }
 }
 

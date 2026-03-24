@@ -10,16 +10,29 @@ public class RouteStopDTO {
         this.route_name = route_name;
         this.location = location_dto;
     }
+
     public RouteStopDTO(LocationDTO location_dto) {
         this.location = location_dto;
     }
-    public RouteStopDTO() {}
+
+    public RouteStopDTO() {
+    }
 
     // Getters
-    public String getRoute_name() {return route_name;}
-    public LocationDTO getLocation() {return location;}
+    public String getRoute_name() {
+        return route_name;
+    }
+
+    public LocationDTO getLocation() {
+        return location;
+    }
 
     // Setters
-    public void setRoute_name(String route_name) {this.route_name = route_name;}
-    public void setLocation(LocationDTO location) {this.location = location;}
+    public void setRoute_name(String route_name) {
+        this.route_name = route_name;
+    }
+
+    public void setLocation(LocationDTO location) {
+        this.location = location;
+    }
 }

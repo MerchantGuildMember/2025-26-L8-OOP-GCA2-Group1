@@ -1,4 +1,5 @@
 package DAO;
+
 import tables.Location;
 
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import utils.JsonUtil;
 
 public class JdbcLocationDAO implements LocationDAO {
@@ -18,8 +20,8 @@ public class JdbcLocationDAO implements LocationDAO {
 
     public JdbcLocationDAO(String url, String user, String pass) {
         if (url == null || url.isBlank())
-            throw new IllegalArgumentException("url is required");
-        _url = url.trim();
+            throw new IllegalArgumentException("URL is required");
+        _url = url;
         _user = user;
         _pass = pass;
     }
@@ -115,12 +117,12 @@ public class JdbcLocationDAO implements LocationDAO {
 
             ps.setBigDecimal(1, location.getLatitude());
             ps.setBigDecimal(2, location.getLongitude());
-            ps.setString(3,location.getFullAddress());
-            ps.setTimestamp(4,Timestamp.valueOf(location.getCreationTime()));
+            ps.setString(3, location.getFullAddress());
+            ps.setTimestamp(4, Timestamp.valueOf(location.getCreationTime()));
             ps.setLong(5, location.getId());
 
             int rows = ps.executeUpdate();
-            if(rows == 0) {
+            if (rows == 0) {
                 throw new IllegalStateException("update failed, rows=" + rows);
             }
             return location;
@@ -140,21 +142,9 @@ public class JdbcLocationDAO implements LocationDAO {
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
         return new Location(id, latitude, longitude, fullAddress, createdAt);
     }
-
     @Override
-    public String locationToJson(Location location) {
-        return JsonUtil.toJson(location);
-    }
-
-    @Override
-    public Location locationFromJson(String json) {
+    public Location entFromJson(String json) {
         return JsonUtil.fromJson(json, Location.class);
     }
-
-    @Override
-    public String locationListToJson(List<Location> locations) {
-        return JsonUtil.listToJson(locations);
-    }
-
 
 }

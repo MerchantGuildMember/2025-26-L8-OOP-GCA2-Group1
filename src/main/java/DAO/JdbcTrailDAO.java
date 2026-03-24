@@ -1,4 +1,5 @@
 package DAO;
+
 import tables.Location;
 import tables.RouteStop;
 import tables.Trail;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import utils.JsonUtil;
 
 public class JdbcTrailDAO implements TrailDAO {
@@ -19,7 +21,7 @@ public class JdbcTrailDAO implements TrailDAO {
     public JdbcTrailDAO(String url, String user, String pass) {
         if (url == null || url.isBlank())
             throw new IllegalArgumentException("url is required");
-        _url = url.trim();
+        _url = url;
         _user = user;
         _pass = pass;
     }
@@ -33,29 +35,59 @@ public class JdbcTrailDAO implements TrailDAO {
     public ArrayList<Trail> findAll() throws Exception {
         String sql = "SELECT id, name, description, difficulty, estimated_time FROM trail ORDER BY id";
         ArrayList<Trail> trails = new ArrayList<>();
+
         try (Connection c = open();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
-                Trail trail = mapTrailRow(rs);
-                trail.setStops(new ArrayList<>(loadStopsForTrail(trail.getId())));
+                Long id = rs.getLong("id");
+                String name = rs.getString("name");
+                String description = rs.getString("description");
+                String difficulty = rs.getString("difficulty");
+                double estimatedTime = rs.getDouble("estimated_time");
+
+                ArrayList<RouteStop> stops = new ArrayList<>(loadStopsForTrail(id));
+                if (stops.isEmpty()) {
+                    continue;
+                }
+
+                Trail trail = new Trail(id, name, description, difficulty, estimatedTime, stops);
                 trails.add(trail);
             }
         }
+
+
+
         return trails;
     }
 
     @Override
     public Optional<Trail> findById(Long id) throws Exception {
-        if (id == null || id <= 0) return Optional.empty();
+        if (id == null || id <= 0) {
+            return Optional.empty();
+        }
+
         String sql = "SELECT id, name, description, difficulty, estimated_time FROM trail WHERE id = ?";
+
         try (Connection c = open();
              PreparedStatement ps = c.prepareStatement(sql)) {
+
             ps.setLong(1, id);
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) return Optional.empty();
-                Trail trail = mapTrailRow(rs);
-                trail.setStops(new ArrayList<>(loadStopsForTrail(id)));
+                if (!rs.next()) {
+                    return Optional.empty();
+                }
+
+                String name = rs.getString("name");
+                String description = rs.getString("description");
+                String difficulty = rs.getString("difficulty");
+                double estimatedTime = rs.getDouble("estimated_time");
+
+                ArrayList<RouteStop> stops = new ArrayList<>(loadStopsForTrail(id));
+
+                Trail trail = new Trail(id, name, description, difficulty, estimatedTime, stops);
                 return Optional.of(trail);
             }
         }
@@ -98,14 +130,14 @@ public class JdbcTrailDAO implements TrailDAO {
             int rows = psTrail.executeUpdate();
             if (rows != 1) throw new IllegalStateException("insert failed, rows=" + rows);
 
-            try(ResultSet keys = psTrail.getGeneratedKeys()){
+            try (ResultSet keys = psTrail.getGeneratedKeys()) {
                 if (!keys.next()) throw new IllegalStateException("no generated key returned");
                 trail.setId(keys.getLong(1));
             }
 
             List<RouteStop> stops = trail.getStops();
             if (stops != null && !stops.isEmpty()) {
-                try(PreparedStatement psStop = c.prepareStatement(
+                try (PreparedStatement psStop = c.prepareStatement(
                         "INSERT INTO trail_stop (trail_id, stop_id, stop_order) VALUES (?, ?, ?)")) {
                     int order = 1;
 
@@ -216,19 +248,8 @@ public class JdbcTrailDAO implements TrailDAO {
         }
         return stops;
     }
-
     @Override
-    public String trailToJson(Trail trail) {
-        return JsonUtil.toJson(trail);
-    }
-
-    @Override
-    public Trail trailFromJson(String json) {
+    public Trail entFromJson(String json) {
         return JsonUtil.fromJson(json, Trail.class);
-    }
-
-    @Override
-    public String trailListToJson(List<Trail> trails) {
-        return JsonUtil.listToJson(trails);
     }
 }
