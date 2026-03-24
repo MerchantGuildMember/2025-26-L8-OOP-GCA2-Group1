@@ -1,5 +1,7 @@
 package DAO;
 
+import shared.ServerResponse;
+import tables.Location;
 import tables.TrailMedia;
 
 import java.sql.*;
@@ -31,7 +33,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
 
 
     @Override
-    public ArrayList<TrailMedia> findAll() throws Exception {
+    public ServerResponse <ArrayList<TrailMedia>> displayAll() throws Exception {
         String sql = "SELECT id, trail_id, stop_id, media_type, url, caption, creation_time FROM trail_media ORDER BY id";
         ArrayList<TrailMedia> list = new ArrayList<>();
         try (Connection c = open();
@@ -41,19 +43,22 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
                 list.add(mapRow(rs));
             }
         }
-        return list;
+        return new ServerResponse<>("Success", "Retrieve trail media", list);
     }
 
     @Override
-    public Optional<TrailMedia> findById(Long id) throws Exception {
-        if (id == null || id <= 0) return Optional.empty();
+    public ServerResponse<TrailMedia>displayById(Long id) throws Exception {
+        if (id == null || id <= 0)
+            return new ServerResponse<>("Error", "ID Error" + id, null);
         String sql = "SELECT id, trail_id, stop_id, media_type, url, caption, creation_time FROM trail_media WHERE id = ?";
         try (Connection c = open();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) return Optional.empty();
-                return Optional.of(mapRow(rs));
+                if (!rs.next())
+                    return new ServerResponse<>("Error", "Trail media not found", null);
+
+                return new ServerResponse<>("Success", "Retrieve trail media", mapRow(rs));
             }
         }
     }
@@ -121,7 +126,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
 
     @Override
     public List<TrailMedia> findByFilter(Predicate<TrailMedia> filter) throws Exception {
-        return findAll().stream().filter(filter).collect(Collectors.toList());
+        return displayAll().getData().stream().filter(filter).collect(Collectors.toList());
     }
 
     private TrailMedia mapRow(ResultSet rs) throws SQLException {

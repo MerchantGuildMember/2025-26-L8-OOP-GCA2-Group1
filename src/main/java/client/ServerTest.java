@@ -1,167 +1,302 @@
 package client;
 
-import java.io.*;
-import java.net.Socket;
+import DAO.JdbcLocationDAO;
+import DAO.JdbcRouteStopDAO;
+import DAO.JdbcTrailDAO;
+import DAO.JdbcTrailMediaDAO;
+import DAO.LocationDAO;
+import DAO.RouteStopDAO;
+import DAO.TrailDAO;
+import DAO.TrailMediaDAO;
+import shared.ServerResponse;
+import tables.Location;
+import tables.RouteStop;
+import tables.Trail;
+import tables.TrailMedia;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+
+/**
+ * Smoke test for all four DAOs using the updated ServerResponse API.
+ *
+ * <p>Tests displayAll() and displayById() for Location, RouteStop, Trail,
+ * and TrailMedia. Also tests insert(), update(), and deleteById() for
+ * Location to verify full CRUD works end-to-end.</p>
+ *
+ * Run this BEFORE starting the server to verify the database connection
+ * and DAO layer are working correctly.
+ *
+ * @author smoke test
+ */
 public class ServerTest {
 
     // === Fields ===
-    private static final String HOST = "localhost";
-    private static final int PORT = 8080;
+    private static final String URL  =
+            "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String USER = "oop_gca2";
+    private static final String PASS = "one";
 
-    private static int _passed = 0;
-    private static int _failed = 0;
+    private static int fPassed = 0;
+    private static int fFailed = 0;
 
     // === Public API ===
-    public static void main(String[] args) {
-        System.out.println("╔══════════════════════════════════╗");
-        System.out.println("║       SERVER TEST — STARTING     ║");
-        System.out.println("╚══════════════════════════════════╝\n");
+    public static void main(String[] args) throws Exception {
 
-        try (Socket socket = new Socket(HOST, PORT);
-             PrintWriter out = new PrintWriter(
-                     socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(
-                     new InputStreamReader(socket.getInputStream()))) {
+        System.out.println("╔══════════════════════════════════════╗");
+        System.out.println("║         DB SERVER TEST — START        ║");
+        System.out.println("╚══════════════════════════════════════╝\n");
 
-            System.out.println("✔️ Connected to server " + HOST + ":" + PORT + "\n");
+        // ── 1. DB Connection ────────────────────────────────────────────
+        testDbConnection();
 
-            // --- Test 1: GET_ALL_LOCATIONS ---
-            testCommand(
-                    out, in,
-                    "GET_ALL_LOCATIONS",
-                    "[", // response should start with [ (JSON array)
-                    "GET_ALL_LOCATIONS returns a JSON array"
-            );
+        // ── 2. Location DAO ─────────────────────────────────────────────
+        testLocationDAO();
 
-            // --- Test 2: GET_LOCATION with existing ID ---
-            testCommand(
-                    out, in,
-                    "GET_LOCATION:1",
-                    "\"id\"", // response should contain id field
-                    "GET_LOCATION:1 returns a JSON object"
-            );
+        // ── 3. RouteStop DAO ────────────────────────────────────────────
+        testRouteStopDAO();
 
-            // --- Test 3: GET_LOCATION with non-existing ID ---
-            testCommand(
-                    out, in,
-                    "GET_LOCATION:99999",
-                    "NOT_FOUND", // should return NOT_FOUND
-                    "GET_LOCATION:99999 returns NOT_FOUND"
-            );
+        // ── 4. Trail DAO ────────────────────────────────────────────────
+        testTrailDAO();
 
-            // --- Test 4: GET_ALL_TRAILS ---
-            testCommand(
-                    out, in,
-                    "GET_ALL_TRAILS",
-                    "[", // JSON array expected
-                    "GET_ALL_TRAILS returns a JSON array"
-            );
+        // ── 5. TrailMedia DAO ───────────────────────────────────────────
+        testTrailMediaDAO();
 
-            // --- Test 5: GET_TRAIL with existing ID ---
-            testCommand(
-                    out, in,
-                    "GET_TRAIL:1",
-                    "\"id\"", // JSON object with id
-                    "GET_TRAIL:1 returns a JSON object"
-            );
-
-            // --- Test 6: GET_TRAIL with non-existing ID ---
-            testCommand(
-                    out, in,
-                    "GET_TRAIL:99999",
-                    "NOT_FOUND",
-                    "GET_TRAIL:99999 returns NOT_FOUND"
-            );
-
-            // --- Test 7: unknown command ---
-            testCommand(
-                    out, in,
-                    "INVALID_COMMAND",
-                    "ERROR", // should return ERROR
-                    "Unknown command returns ERROR"
-            );
-
-            // --- Test 8: invalid ID format ---
-            testCommand(
-                    out, in,
-                    "GET_LOCATION:abc",
-                    "ERROR", // should return ERROR because abc is not a number
-                    "Invalid ID format returns ERROR"
-            );
-
-        } catch (IOException e) {
-            System.out.println("✘ Could not connect to server: " + e.getMessage());
-            System.out.println("  Make sure Server.java is running on port " + PORT);
-            return;
-        }
-
-        // --- Summary ---
+        // ── Summary ─────────────────────────────────────────────────────
         printSummary();
     }
 
     // === Helpers ===
 
-    // Sends: one command, reads the response, checks if it contains expected string
-    private static void testCommand(PrintWriter out,
-                                    BufferedReader in,
-                                    String command,
-                                    String expectedContains,
-                                    String testName) throws IOException {
-
-        System.out.println("┌─ Test: " + testName);
-        System.out.println("│  >>> " + command);
-
-        // Sends: command to the server
-        out.println(command);
-
-        // Reads: response until END marker is received
-        StringBuilder response = new StringBuilder();
-        String line;
-        while ((line = in.readLine()) != null && !line.equals("END")) {
-            response.append(line).append("\n");
+    // Tests: raw JDBC connection using SELECT 1 — same as the original DbSmokeTest
+    private static void testDbConnection() {
+        System.out.println("━━━ 1. Database Connection ━━━");
+        try {
+            java.sql.Connection c = java.sql.DriverManager.getConnection(URL, USER, PASS);
+            java.sql.PreparedStatement ps = c.prepareStatement("SELECT 1");
+            java.sql.ResultSet rs = ps.executeQuery();
+            rs.next();
+            int val = rs.getInt(1);
+            c.close();
+            pass("SELECT 1 -> " + val);
+        } catch (Exception e) {
+            fail("DB connection failed: " + e.getMessage());
         }
-
-        String result = response.toString().trim();
-
-        // Prints: shortened response if too long
-        System.out.println("│  <<< " + (result.length() > 80
-                ? result.substring(0, 80) + "..."
-                : result));
-
-        // Checks: if response contains expected value
-        if (result.contains(expectedContains)) {
-            System.out.println("│  ✔️ PASSED — response contains: \"" + expectedContains + "\"");
-            _passed++;
-        } else {
-            System.out.println("│  ✘ FAILED — expected: \"" + expectedContains
-                    + "\", got: \"" + result + "\"");
-            _failed++;
-        }
-
-        System.out.println("└─────────────────────────────────\n");
+        System.out.println();
     }
 
-    // Prints: final test summary
-    private static void printSummary() {
-        int total = _passed + _failed;
+    // Tests: LocationDAO — displayAll, displayById, insert, update, deleteById
+    private static void testLocationDAO() throws Exception {
+        System.out.println("━━━ 2. LocationDAO ━━━");
+        LocationDAO dao = new JdbcLocationDAO(URL, USER, PASS);
 
-        System.out.println("╔══════════════════════════════════╗");
-        System.out.println("║             RESULTS              ║");
-        System.out.println("╠══════════════════════════════════╣");
+        // displayAll
+        ServerResponse<ArrayList<Location>> allResp = dao.displayAll();
+        check("displayAll() status is Success",
+                "Success".equals(allResp.getStatus()));
+        check("displayAll() returns data",
+                allResp.getData() != null && !allResp.getData().isEmpty());
 
-        System.out.printf("║  Total tests:   %-15d ║%n", total);
-        System.out.printf("║  ✔️ Passed:      %-15d ║%n", _passed);
-        System.out.printf("║  ✘ Failed:      %-15d ║%n", _failed);
+        int countBefore = allResp.getData() != null ? allResp.getData().size() : 0;
+        System.out.println("  Found " + countBefore + " locations in DB");
 
-        System.out.println("╠══════════════════════════════════╣");
+        // insert
+        Location newLoc = new Location(null, 53.3497, -6.2603,
+                "Smoke Test Location", LocalDateTime.now());
+        Location inserted = dao.insert(newLoc);
+        check("insert() returns object with generated id",
+                inserted.getId() != null && inserted.getId() > 0);
+        System.out.println("  Inserted location with id=" + inserted.getId());
+        // displayById — found
+        ServerResponse<Location> byIdResp = dao.displayById(inserted.getId());
+        check("displayById() status is Success",
+                "Success".equals(byIdResp.getStatus()));
+        check("displayById() returns correct address",
+                byIdResp.getData() != null &&
+                        "Smoke Test Location".equals(byIdResp.getData().getFullAddress()));
 
-        if (_failed == 0) {
-            System.out.println("║       ALL TESTS PASSED ✔️         ║");
-        } else {
-            System.out.println("║     SOME TESTS FAILED ✘          ║");
+        // displayById — not found
+        ServerResponse<Location> notFoundResp = dao.displayById(999999L);
+        check("displayById(999999) status is Error",
+                "Error".equals(notFoundResp.getStatus()));
+        check("displayById(999999) data is null",
+                notFoundResp.getData() == null);
+
+        // displayById — invalid id
+        ServerResponse<Location> invalidResp = dao.displayById(-1L);
+        check("displayById(-1) status is Error",
+                "Error".equals(invalidResp.getStatus()));
+
+        // update
+        inserted.setFullAddress("Updated Smoke Test Location");
+        Location updated = dao.update(inserted);
+        check("update() returns object with updated address",
+                "Updated Smoke Test Location".equals(updated.getFullAddress()));
+
+        // deleteById
+        boolean deleted = dao.deleteById(inserted.getId());
+        check("deleteById() returns true", deleted);
+
+        // confirm deleted
+        ServerResponse<Location> afterDelete = dao.displayById(inserted.getId());
+        check("displayById() after delete returns Error",
+                "Error".equals(afterDelete.getStatus()));
+
+        // entToJson / entFromJson
+        Location sample = new Location(1L, 53.34, -6.26,
+                "Test JSON Location", LocalDateTime.now());
+        String json = dao.entToJson(sample);
+        check("entToJson() returns non-empty string",
+                json != null && !json.isBlank());
+        Location fromJson = dao.entFromJson(json);
+        check("entFromJson() returns object with correct address",
+                fromJson != null &&
+                        "Test JSON Location".equals(fromJson.getFullAddress()));
+
+        System.out.println();
+    }
+
+    // Tests: RouteStopDAO — displayAll and displayById
+    private static void testRouteStopDAO() throws Exception {
+        System.out.println("━━━ 3. RouteStopDAO ━━━");
+        RouteStopDAO dao = new JdbcRouteStopDAO(URL, USER, PASS);
+
+        // displayAll
+        ServerResponse<ArrayList<RouteStop>> allResp = dao.displayAll();
+        check("displayAll() status is Success",
+                "Success".equals(allResp.getStatus()));
+        check("displayAll() returns data",
+                allResp.getData() != null);
+
+        int count = allResp.getData() != null ? allResp.getData().size() : 0;
+        System.out.println("  Found " + count + " route stops in DB");
+
+        // displayById — first existing record
+        if (count > 0) {
+            Long firstId = allResp.getData().get(0).getId();
+            ServerResponse<RouteStop> byIdResp = dao.displayById(firstId);
+            check("displayById(" + firstId + ") status is Success",
+                    "Success".equals(byIdResp.getStatus()));
+            check("displayById(" + firstId + ") data is not null",
+                    byIdResp.getData() != null);
         }
 
-        System.out.println("╚══════════════════════════════════╝");
+        // displayById — not found
+        ServerResponse<RouteStop> notFound = dao.displayById(999999L);
+        check("displayById(999999) status is Error",
+                "Error".equals(notFound.getStatus()));
+
+        System.out.println();
+    }
+
+    // Tests: TrailDAO — displayAll and displayById
+    private static void testTrailDAO() throws Exception {
+        System.out.println("━━━ 4. TrailDAO ━━━");
+        TrailDAO dao = new JdbcTrailDAO(URL, USER, PASS);
+
+        // displayAll
+        ServerResponse<ArrayList<Trail>> allResp = dao.displayAll();
+        check("displayAll() status is Success",
+                "Success".equals(allResp.getStatus()));
+        check("displayAll() returns data",
+                allResp.getData() != null);
+        int count = allResp.getData() != null ? allResp.getData().size() : 0;
+        System.out.println("  Found " + count + " trails in DB");
+
+        // displayById — first existing record
+        if (count > 0) {
+            Long firstId = allResp.getData().get(0).getId();
+            ServerResponse<Trail> byIdResp = dao.displayById(firstId);
+            check("displayById(" + firstId + ") status is Success",
+                    "Success".equals(byIdResp.getStatus()));
+            check("displayById(" + firstId + ") has stops",
+                    byIdResp.getData() != null &&
+                            byIdResp.getData().getStops() != null &&
+                            !byIdResp.getData().getStops().isEmpty());
+        }
+
+        // displayById — not found
+        ServerResponse<Trail> notFound = dao.displayById(999999L);
+        check("displayById(999999) status is Error",
+                "Error".equals(notFound.getStatus()));
+
+        // displayById — invalid id
+        ServerResponse<Trail> invalid = dao.displayById(-5L);
+        check("displayById(-5) status is Error",
+                "Error".equals(invalid.getStatus()));
+
+        System.out.println();
+    }
+
+    // Tests: TrailMediaDAO — displayAll and displayById
+    private static void testTrailMediaDAO() throws Exception {
+        System.out.println("━━━ 5. TrailMediaDAO ━━━");
+        TrailMediaDAO dao = new JdbcTrailMediaDAO(URL, USER, PASS);
+
+        // displayAll
+        ServerResponse<ArrayList<TrailMedia>> allResp = dao.displayAll();
+        check("displayAll() status is Success",
+                "Success".equals(allResp.getStatus()));
+        check("displayAll() returns data",
+                allResp.getData() != null);
+
+        int count = allResp.getData() != null ? allResp.getData().size() : 0;
+        System.out.println("  Found " + count + " trail media records in DB");
+
+        // displayById — first existing record
+        if (count > 0) {
+            Long firstId = allResp.getData().get(0).getId();
+            ServerResponse<TrailMedia> byIdResp = dao.displayById(firstId);
+            check("displayById(" + firstId + ") status is Success",
+                    "Success".equals(byIdResp.getStatus()));
+            check("displayById(" + firstId + ") data is not null",
+                    byIdResp.getData() != null);
+        }
+
+        // displayById — not found
+        ServerResponse<TrailMedia> notFound = dao.displayById(999999L);
+        check("displayById(999999) status is Error",
+                "Error".equals(notFound.getStatus()));
+
+        System.out.println();
+    }
+
+    // Checks: a boolean condition and prints pass/fail
+    private static void check(String label, boolean condition) {
+        if (condition) {
+            pass(label);
+        } else {
+            fail(label);
+        }
+    }
+
+    // Prints: a PASSED result
+    private static void pass(String label) {
+        System.out.println("  ✔️ PASSED — " + label);
+        fPassed++;
+    }
+
+    // Prints: a FAILED result
+    private static void fail(String label) {
+        System.out.println("  ✘ FAILED — " + label);
+        fFailed++;
+    }
+
+    // Prints: the final summary
+    private static void printSummary() {
+        int total = fPassed + fFailed;
+        System.out.println("╔══════════════════════════════════════╗");
+        System.out.println("║             RESULTS                  ║");
+        System.out.println("╠══════════════════════════════════════╣");
+        System.out.printf( "║  Total:   %-28d ║%n", total);
+        System.out.printf( "║  ✔️ Passed: %-27d ║%n", fPassed);
+        System.out.printf( "║  ✘ Failed: %-27d ║%n", fFailed);
+        System.out.println("╠══════════════════════════════════════╣");
+        if (fFailed == 0) {
+            System.out.println("║       ALL TESTS PASSED ✔️             ║");
+        } else {
+            System.out.println("║     SOME TESTS FAILED ✘              ║");
+        }
+        System.out.println("╚══════════════════════════════════════╝");
     }
 }

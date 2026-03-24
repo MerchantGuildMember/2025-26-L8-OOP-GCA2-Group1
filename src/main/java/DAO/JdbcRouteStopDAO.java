@@ -1,5 +1,6 @@
 package DAO;
 
+import shared.ServerResponse;
 import tables.Location;
 import tables.RouteStop;
 
@@ -32,7 +33,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
 
 
     @Override
-    public ArrayList<RouteStop> findAll() throws Exception {
+    public ServerResponse<ArrayList<RouteStop>> displayAll() throws Exception {
         String sql = "SELECT rs.id, rs.route_name, rs.created_at, " +
                 "l.id AS loc_id, l.latitude, l.longitude, l.full_address, l.created_at AS loc_created_at " +
                 "FROM route_stop rs " +
@@ -46,15 +47,15 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
             ArrayList<RouteStop> out = new ArrayList<>();
             while (rs.next())
                 out.add(mapRow(rs));
-            return out;
+            return new ServerResponse<>("Success", "Retrieved Route Stops", out);
         }
 
     }
 
     @Override
-    public Optional<RouteStop> findById(Long id) throws Exception {
+    public ServerResponse<RouteStop> displayById(Long id) throws Exception {
         if (id == null || id <= 0)
-            return Optional.empty();
+            return new ServerResponse<>("Error", "ID Error " + id, null);
 
         String sql = "SELECT rs.id, rs.route_name, rs.created_at, " +
                 "l.id AS loc_id, l.latitude, l.longitude, l.full_address, l.created_at AS loc_created_at " +
@@ -69,8 +70,8 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next())
-                    return Optional.empty();
-                return Optional.of(mapRow(rs));
+                    return new ServerResponse<>("Error", "Route Stop not found" + id, null);
+                return new ServerResponse<>("Success", "Route Stop found", mapRow(rs));
             }
         }
     }
@@ -136,7 +137,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
 
     @Override
     public List<RouteStop> findByFilter(Predicate<RouteStop> filter) throws Exception {
-        return findAll().stream().filter(filter).collect(Collectors.toList());
+        return displayAll().getData().stream().filter(filter).collect(Collectors.toList());
     }
 
     private RouteStop mapRow(ResultSet rs) throws SQLException {

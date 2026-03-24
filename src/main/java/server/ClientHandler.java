@@ -1,115 +1,246 @@
 package server;
 
 import DAO.JdbcLocationDAO;
+import DAO.JdbcRouteStopDAO;
 import DAO.JdbcTrailDAO;
+import DAO.JdbcTrailMediaDAO;
 import DAO.LocationDAO;
+import DAO.RouteStopDAO;
 import DAO.TrailDAO;
+import DAO.TrailMediaDAO;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonPrimitive;
+import shared.ServerResponse;
 import tables.Location;
+import tables.RouteStop;
 import tables.Trail;
+import tables.TrailMedia;
 import utils.JsonUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.List;
-
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 /**
- * Client handler for the server.
+ * Handles a single client connection on a dedicated thread.
  *
- * @author Maryna Hordiienko
+ * <p>Reads newline-delimited JSON requests, routes each to the correct DAO
+ * method, and writes a {@link ServerResponse} JSON back on the same line.
+ * Exceptions are caught here — they are never propagated to the client as
+ * raw stack traces.</p>
+ *
+ * @author Maryna Hordiienko (primary)
  */
-
-// Implements Runnable so this handler can be submitted to an ExecutorService
 public class ClientHandler implements Runnable {
 
     // === Fields ===
-    private final Socket _clientSocket;
-    private final LocationDAO _locationDAO;
-    private final TrailDAO _trailDAO;
+    private final Socket fClientSocket;
+    private final LocationDAO fLocationDAO;
+    private final TrailDAO fTrailDAO;
+    private final RouteStopDAO fRouteStopDAO;
+    private final TrailMediaDAO fTrailMediaDAO;
+    private final Gson fGson;
 
     // === Constructors ===
-    // Creates: a handler for one connected client
-    public ClientHandler(Socket clientSocket, String dbUrl,
-                         String dbUser, String dbPass) {
+    // Creates: a ClientHandler bound to one socket with its own DAO instances
+    public ClientHandler(Socket clientSocket, String dbUrl, String dbUser, String dbPass) {
         if (clientSocket == null)
             throw new IllegalArgumentException("clientSocket is required");
+        if (dbUrl == null || dbUrl.isBlank())
+            throw new IllegalArgumentException("dbUrl is required");
 
-        _clientSocket = clientSocket;
-        _locationDAO = new JdbcLocationDAO(dbUrl, dbUser, dbPass);
-        _trailDAO = new JdbcTrailDAO(dbUrl, dbUser, dbPass);
+        fClientSocket  = clientSocket;
+        fLocationDAO   = new JdbcLocationDAO(dbUrl, dbUser, dbPass);
+        fTrailDAO      = new JdbcTrailDAO(dbUrl, dbUser, dbPass);
+        fRouteStopDAO  = new JdbcRouteStopDAO(dbUrl, dbUser, dbPass);
+        fTrailMediaDAO = new JdbcTrailMediaDAO(dbUrl, dbUser, dbPass);
+        fGson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class,
+                        (JsonSerializer<LocalDateTime>) (src, t, ctx) -> new JsonPrimitive(src.toString()))
+                .registerTypeAdapter(LocalDateTime.class,
+                        (JsonDeserializer<LocalDateTime>) (json, t, ctx) -> LocalDateTime.parse(json.getAsString()))
+                .create();
     }
 
     // === Public API ===
-    // Runs: the client session — reads commands and sends JSON responses
-    // Called by the thread pool when a thread becomes available
+    // Runs: the client request/response loop until the client disconnects
     @Override
     public void run() {
-        String threadName = Thread.currentThread().getName();
-        System.out.println("[" + threadName + "] Client connected: "
-                + _clientSocket.getInetAddress());
+        String thread = Thread.currentThread().getName();
+        System.out.println("[" + thread + "] Connected: " + fClientSocket.getInetAddress());
 
-        // Uses try-with-resources so the socket and streams are closed automatically
-        try (Socket socket = _clientSocket;
-             BufferedReader in = new BufferedReader(
-                     new InputStreamReader(socket.getInputStream()));
-             PrintWriter out = new PrintWriter(
-                     socket.getOutputStream(), true)) {
+        try (Socket socket = fClientSocket;
+             BufferedReader in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter    out = new PrintWriter(socket.getOutputStream(), true)) {
 
-            String command;
-
-            // Reads commands until the client disconnects
-            while ((command = in.readLine()) != null) {
-                System.out.println("[" + threadName + "] Command: " + command);
-
-                String response = processCommand(command);
+            String line;
+            while ((line = in.readLine()) != null) {
+                if (line.isBlank())
+                    continue;
+                System.out.println("[" + thread + "] << " + line);
+                String response = dispatch(line);
+                System.out.println("[" + thread + "] >> " + response);
                 out.println(response);
-                out.println("END"); // Marks the end of the response
             }
 
-        } catch (IOException e) {
-            System.out.println("[" + threadName + "] IO error: " + e.getMessage());
+        }
+        catch (IOException e) {
+            System.err.println("[" + thread + "] IO error: " + e.getMessage());
         }
 
-        System.out.println("[" + threadName + "] Client disconnected.");
+        System.out.println("[" + thread + "] Disconnected.");
     }
 
     // === Helpers ===
-    // Processes: a single command string and returns a JSON response
-    private String processCommand(String command) {
+    // Dispatches: parses the action field and calls the matching handler method
+    private String dispatch(String requestJson) {
         try {
-            // Handles: request to retrieve all locations
-            if (command.equals("GET_ALL_LOCATIONS")) {
-                List<Location> locations = _locationDAO.findAll();
-                return JsonUtil.listToJson(locations);
+            JsonObject req    = JsonParser.parseString(requestJson).getAsJsonObject();
+            String     action = req.get("action").getAsString();
+
+            switch (action) {
+
+                // ── Location ──────────────────────────────────────────
+                case "GET_ALL_LOCATIONS":
+                    return toJson(fLocationDAO.displayAll());
+
+                case "GET_LOCATION_BY_ID": {
+                    long id = req.get("id").getAsLong();
+                    return toJson(fLocationDAO.displayById(id));
+                }
+
+                case "ADD_LOCATION": {
+                    Location loc = fGson.fromJson(req.get("data"), Location.class);
+                    Location inserted = fLocationDAO.insert(loc);
+                    return toJson(ServerResponse.ok("Location added", inserted));
+                }
+
+                case "UPDATE_LOCATION": {
+                    Location loc = fGson.fromJson(req.get("data"), Location.class);
+                    Location updated = fLocationDAO.update(loc);
+                    return toJson(ServerResponse.ok("Location updated", updated));
+                }
+
+                case "DELETE_LOCATION": {
+                    long id = req.get("id").getAsLong();
+                    boolean ok = fLocationDAO.deleteById(id);
+                    if (ok)
+                        return toJson(ServerResponse.<Void>ok("Location deleted", null));
+                    return toJson(ServerResponse.<Void>error("Location not found: " + id));
+                }
+
+                // ── Trail ─────────────────────────────────────────────
+                case "GET_ALL_TRAILS":
+                    return toJson(fTrailDAO.displayAll());
+
+                case "GET_TRAIL_BY_ID": {
+                    long id = req.get("id").getAsLong();
+                    return toJson(fTrailDAO.displayById(id));
+                }
+
+                case "ADD_TRAIL": {
+                    Trail trail = fGson.fromJson(req.get("data"), Trail.class);
+                    Trail inserted = fTrailDAO.insert(trail);
+                    return toJson(ServerResponse.ok("Trail added", inserted));
+                }
+
+                case "UPDATE_TRAIL": {
+                    Trail trail = fGson.fromJson(req.get("data"), Trail.class);
+                    Trail updated = fTrailDAO.update(trail);
+                    return toJson(ServerResponse.ok("Trail updated", updated));
+                }
+
+                case "DELETE_TRAIL": {
+                    long id = req.get("id").getAsLong();
+                    boolean ok = fTrailDAO.deleteById(id);
+                    if (ok)
+                        return toJson(ServerResponse.<Void>ok("Trail deleted", null));
+                    return toJson(ServerResponse.<Void>error("Trail not found: " + id));
+                }
+
+                // ── RouteStop ─────────────────────────────────────────
+                case "GET_ALL_ROUTESTOPS":
+                    return toJson(fRouteStopDAO.displayAll());
+
+                case "GET_ROUTESTOP_BY_ID": {
+                    long id = req.get("id").getAsLong();
+                    return toJson(fRouteStopDAO.displayById(id));
+                }
+
+                case "ADD_ROUTESTOP": {
+                    RouteStop rs = fGson.fromJson(req.get("data"), RouteStop.class);
+                    RouteStop inserted = fRouteStopDAO.insert(rs);
+                    return toJson(ServerResponse.ok("RouteStop added", inserted));
+                }
+
+                case "UPDATE_ROUTESTOP": {
+                    RouteStop rs = fGson.fromJson(req.get("data"), RouteStop.class);
+                    RouteStop updated = fRouteStopDAO.update(rs);
+                    return toJson(ServerResponse.ok("RouteStop updated", updated));
+                }
+
+                case "DELETE_ROUTESTOP": {
+                    long id = req.get("id").getAsLong();
+                    boolean ok = fRouteStopDAO.deleteById(id);
+                    if (ok)
+                        return toJson(ServerResponse.<Void>ok("RouteStop deleted", null));
+                    return toJson(ServerResponse.<Void>error("RouteStop not found: " + id));
+                }
+
+                // ── TrailMedia ────────────────────────────────────────
+                case "GET_ALL_TRAILMEDIA":
+                    return toJson(fTrailMediaDAO.displayAll());
+
+                case "GET_TRAILMEDIA_BY_ID": {
+                    long id = req.get("id").getAsLong();
+                    return toJson(fTrailMediaDAO.displayById(id));
+                }
+
+                case "ADD_TRAILMEDIA": {
+                    TrailMedia tm = fGson.fromJson(req.get("data"), TrailMedia.class);
+                    TrailMedia inserted = fTrailMediaDAO.insert(tm);
+                    return toJson(ServerResponse.ok("TrailMedia added", inserted));
+                }
+
+                case "UPDATE_TRAILMEDIA": {
+                    TrailMedia tm = fGson.fromJson(req.get("data"), TrailMedia.class);
+                    TrailMedia updated = fTrailMediaDAO.update(tm);
+                    return toJson(ServerResponse.ok("TrailMedia updated", updated));
+                }
+
+                case "DELETE_TRAILMEDIA": {
+                    long id = req.get("id").getAsLong();
+                    boolean ok = fTrailMediaDAO.deleteById(id);
+                    if (ok)
+                        return toJson(ServerResponse.<Void>ok("TrailMedia deleted", null));
+                    return toJson(ServerResponse.<Void>error("TrailMedia not found: " + id));
+                }
+
+                // ── Lifecycle ─────────────────────────────────────────
+                case "DISCONNECT":
+                    return toJson(ServerResponse.<Void>ok("Goodbye", null));
+
+                default:
+                    return toJson(ServerResponse.<Void>error("Unknown action: " + action));
             }
 
-            // Handles: request to retrieve one location by ID
-            if (command.startsWith("GET_LOCATION:")) {
-                Long id = Long.parseLong(command.split(":")[1].trim());
-                return _locationDAO.findById(id)
-                        .map(JsonUtil::toJson)
-                        .orElse("NOT_FOUND");
-            }
-
-            // Handles: request to retrieve all trails
-            if (command.equals("GET_ALL_TRAILS")) {
-                List<Trail> trails = _trailDAO.findAll();
-                System.out.println("TEST"+ trails.size());
-                return JsonUtil.listToJson(trails);
-            }
-
-            // Handles: request to retrieve one trail by ID
-            if (command.startsWith("GET_TRAIL:")) {
-                Long id = Long.parseLong(command.split(":")[1].trim());
-                return _trailDAO.findById(id)
-                        .map(JsonUtil::toJson)
-                        .orElse("NOT_FOUND");
-            }
-
-            return "ERROR: Unknown command: " + command;
-
-        } catch (Exception e) {
-            return "ERROR: " + e.getMessage();
         }
+        catch (Exception e) {
+            return toJson(ServerResponse.<Void>error("Server error: " + e.getMessage()));
+        }
+    }
+
+    // Converts: any object to a single-line JSON string using fGson
+    private String toJson(Object obj) {
+        return fGson.toJson(obj);
     }
 }

@@ -1,6 +1,6 @@
+/*
 import DAO.JdbcLocationDAO;
 import DAO.LocationDAO;
-import server.MultiClientServer;
 import tables.Location;
 
 public class DBSmokeTest2 {
@@ -14,10 +14,11 @@ public class DBSmokeTest2 {
 
         // 3. Test FIND ALL
         System.out.println("All locations:");
-        dao.findAll().forEach(location ->
+        dao.displayAll().forEach(location ->
                 System.out.println(location.getId() + ": " + location.getFullAddress())
         );
 
 
     }
 }
+*/
