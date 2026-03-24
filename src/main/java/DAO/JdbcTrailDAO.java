@@ -248,19 +248,8 @@ public class JdbcTrailDAO implements TrailDAO {
         }
         return stops;
     }
-
     @Override
-    public String trailToJson(Trail trail) {
-        return JsonUtil.toJson(trail);
-    }
-
-    @Override
-    public Trail trailFromJson(String json) {
+    public Trail entFromJson(String json) {
         return JsonUtil.fromJson(json, Trail.class);
-    }
-
-    @Override
-    public String trailListToJson(List<Trail> trails) {
-        return JsonUtil.listToJson(trails);
     }
 }

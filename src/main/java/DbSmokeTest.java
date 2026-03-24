@@ -1,5 +1,6 @@
 import DAO.JdbcLocationDAO;
 import DAO.JdbcTrailDAO;
+import DAO.LocationDAO;
 import DAO.TrailDAO;
 import tables.Location;
 import tables.Trail;
@@ -13,21 +14,14 @@ import static utils.JsonUtil.listToJson;
 
 public class DbSmokeTest {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
-        String url = "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-        String user = "oop_gca2";
-        String pass = "one";
+        LocationDAO dao = new JdbcLocationDAO(System.getenv("URL"), System.getenv("USER"), System.getenv("PASS"));
 
-        JdbcLocationDAO dao = new JdbcLocationDAO(url, user, pass);
-
-        try {
-            // 1. Test INSERT
-            Location newLoc = new Location(null,
-                    53.3497, 6.2603,
-                    "Dublin, O'Connell", LocalDateTime.now());
-            Location inserted = dao.insert(newLoc);
-            System.out.println("Inserted location with ID: " + inserted.getId());
+        Location newLoc = new Location(null,
+                53.3497, 6.2603,
+                "Dublin, O'Connell", LocalDateTime.now());
+        Location inserted = dao.insert(newLoc);
 
             // 2. Test FIND BY ID
             Long id = inserted.getId();
@@ -58,10 +52,10 @@ public class DbSmokeTest {
 
             // 7. Test JSON Conversion (F9)
             System.out.println("JSON Conversion Test");
-            String json = dao.locationToJson(newLoc);
+            String json = dao.entToJson(newLoc);
             System.out.println("Converted location to JSON: " + json);
 
-            Location location = dao.locationFromJson(json);
+            Location location = dao.entFromJson(json);
             System.out.println("Converted JSON to location: " + location);
             Location newLoc1 = new Location(null,
                     92.3497, 5.2603,
@@ -82,9 +76,5 @@ public class DbSmokeTest {
             for(Trail trail : trails){
                 System.out.println(trail.getId());
             }
-
-        } catch (Exception e) {
-            System.out.println("Error while testing: " + e.getMessage());
-        }
     }
 }
