@@ -1,6 +1,23 @@
+import DAO.*;
+import tables.Location;
+
+import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class Main {
+
+    private static final String URL  = System.getenv("URL");
+    private static final String USER = System.getenv("USER");
+    private static final String PASS = System.getenv("PASS");
+
+
+    static LocationDAO locationDAO      = new JdbcLocationDAO(URL, USER, PASS);
+    static RouteStopDAO routeStopDAO    = new JdbcRouteStopDAO(URL, USER, PASS);
+    static TrailDAO trailDAO            = new JdbcTrailDAO(URL, USER, PASS);
+    static TrailMediaDAO trailMediaDAO  = new JdbcTrailMediaDAO(URL, USER, PASS);
+
+
+
     public static void main(String[] args) throws Exception {
 
 //        welcomeMessage();
@@ -26,10 +43,10 @@ public class Main {
         System.out.print("Input: ");
         Scanner input = new Scanner(System.in);
         int choice = input.nextInt();
-        do{
+        while (choice != 1 && choice != 2) {
             System.out.println("Try again");
             choice = input.nextInt();
-        } while(choice < 1 || choice > 2);
+        }
         route(choice);
     }
 
@@ -51,24 +68,50 @@ public class Main {
                 updateMenu();
                 break;
             case 6:
-                deleteMenu();
+//                deleteMenu();
                 break;
             case 7:
                 addNewLocation();
                 break;
             case 8:
-                addNewRouteStop();
+//                addNewRouteStop();
                 break;
             case 9:
-                addNewTrail();
+//                addNewTrail();
                 break;
             case 10:
-                addNewTrailMedia();
+//                addNewTrailMedia();
                 break;
             default:
                 System.out.println("Invalid choice");
         }
     }
+
+    private static void addNewLocation() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Entering New Location");
+
+        System.out.print("\nLatitude: ");
+        Double latitude = input.nextDouble(); input.nextLine();
+
+        System.out.print("\nLongitude: ");
+        Double longitude = input.nextDouble(); input.nextLine();
+
+        System.out.print("\nFull Address: ");
+        String fullAddress = input.nextLine();
+
+        LocalDateTime time = LocalDateTime.now();
+        System.out.println("\nInserting Location: "+latitude+ ", "+longitude+", \""+fullAddress+"\", "+time);
+
+        Location newLocation = new Location(null, latitude, longitude, fullAddress, time);
+        try {
+            locationDAO.insert(newLocation);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to insert location");
+        }
+
+    }
+
 
     static void createMenu() {
         System.out.println("_______________________");
@@ -81,13 +124,14 @@ public class Main {
         System.out.print("Input: ");
         Scanner input = new Scanner(System.in);
         int choice = input.nextInt();
-        do{
+        while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt();
-        } while(choice < 1 || choice > 5);
+        }
 
         if(choice == 5) System.exit(0);
         route(choice+6);
+        input.close();
 
     }
 
@@ -108,11 +152,12 @@ public class Main {
         System.out.print("Input: ");
         Scanner input = new Scanner(System.in);
         int choice = input.nextInt();
-        do{
+        while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt();
-        }  while(choice < 1 || choice > 5);
+        }
         if(choice == 5) System.exit(0);
+        input.close();
 
 
 //        route(choice+6);
@@ -130,13 +175,14 @@ public class Main {
         System.out.print("Input: ");
         Scanner input = new Scanner(System.in);
         int choice = input.nextInt();
-        do{
+        while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt();
-        } while(choice < 1 || choice > 5);
+        }
 
         if(choice == 5) System.exit(0);
         route(choice+2);
+        input.close();
 
     }
 
