@@ -14,7 +14,7 @@ public class DBSmokeTest2 {
 
         // 3. Test FIND ALL
         System.out.println("All locations:");
-        dao.findAll().forEach(location ->
+        dao.displayAll().forEach(location ->
                 System.out.println(location.getId() + ": " + location.getFullAddress())
         );
 

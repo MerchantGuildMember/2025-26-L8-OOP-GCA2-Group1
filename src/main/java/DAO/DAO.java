@@ -5,15 +5,14 @@ import utils.JsonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public interface DAO<T> {
 
     // F3 Get All Entities - added Maryna's ServerResponse edit
-    ServerResponse<ArrayList<T>> findAll() throws Exception;
+    ServerResponse<ArrayList<T>> displayAll() throws Exception;
 
     // F4 Get by ID - added Maryna's ServerResponse edit
-    ServerResponse<T> findById(Long id) throws Exception;
+    ServerResponse<T> displayById(Long id) throws Exception;
 
     // F5 Delete By ID
     boolean deleteById(Long id) throws Exception;

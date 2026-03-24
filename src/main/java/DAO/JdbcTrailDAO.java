@@ -1,5 +1,6 @@
 package DAO;
 
+import shared.ServerResponse;
 import tables.Location;
 import tables.RouteStop;
 import tables.Trail;
@@ -7,7 +8,6 @@ import tables.Trail;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -32,7 +32,7 @@ public class JdbcTrailDAO implements TrailDAO {
 
 
     @Override
-    public ArrayList<Trail> findAll() throws Exception {
+    public ServerResponse<ArrayList<Trail>> displayAll() throws Exception {        // MH
         String sql = "SELECT id, name, description, difficulty, estimated_time FROM trail ORDER BY id";
         ArrayList<Trail> trails = new ArrayList<>();
 
@@ -59,13 +59,13 @@ public class JdbcTrailDAO implements TrailDAO {
 
 
 
-        return trails;
+        return new ServerResponse<>("Success", "Retrieve trails", trails);      // MH
     }
 
     @Override
-    public Optional<Trail> findById(Long id) throws Exception {
+    public ServerResponse<Trail> displayById(Long id) throws Exception {       // MH
         if (id == null || id <= 0) {
-            return Optional.empty();
+            return new ServerResponse<>("Error", "ID Error" + id, null);        // MH
         }
 
         String sql = "SELECT id, name, description, difficulty, estimated_time FROM trail WHERE id = ?";
@@ -77,7 +77,7 @@ public class JdbcTrailDAO implements TrailDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    return Optional.empty();
+                    return new ServerResponse<>("Error", "Trail not found", null);      // MH
                 }
 
                 String name = rs.getString("name");
@@ -88,7 +88,7 @@ public class JdbcTrailDAO implements TrailDAO {
                 ArrayList<RouteStop> stops = new ArrayList<>(loadStopsForTrail(id));
 
                 Trail trail = new Trail(id, name, description, difficulty, estimatedTime, stops);
-                return Optional.of(trail);
+                return new ServerResponse<>("Success", "Retrieve trail", trail);        // MH
             }
         }
     }
@@ -200,7 +200,7 @@ public class JdbcTrailDAO implements TrailDAO {
 
     @Override
     public List<Trail> findByFilter(Predicate<Trail> filter) throws Exception {
-        return findAll().stream().filter(filter).collect(Collectors.toList());
+        return displayAll().getData().stream().filter(filter).collect(Collectors.toList());     // MH
     }
 
     private Trail mapTrailRow(ResultSet rs) throws SQLException {

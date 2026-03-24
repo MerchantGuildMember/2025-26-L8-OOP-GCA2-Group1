@@ -32,7 +32,7 @@ public class JdbcLocationDAO implements LocationDAO {
 
 
     @Override
-    public ServerResponse<ArrayList<Location>> findAll() throws Exception { // MH
+    public ServerResponse<ArrayList<Location>> displayAll() throws Exception { // MH
         String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location ORDER BY id";
 
         try (Connection c = open();
@@ -48,7 +48,7 @@ public class JdbcLocationDAO implements LocationDAO {
     }
 
     @Override
-    public ServerResponse<Location> findById(Long id) throws Exception { // MH
+    public ServerResponse<Location> displayById(Long id) throws Exception { // MH
         if (id == null || id <= 0)
             return new ServerResponse<>("Error", "ID Error " + id, null); // MH
 
@@ -131,7 +131,7 @@ public class JdbcLocationDAO implements LocationDAO {
 
     @Override
     public List<Location> findByFilter(Predicate<Location> filter) throws Exception {
-        return findAll().stream().filter(filter).collect(Collectors.toList());
+        return displayAll().getData().stream().filter(filter).collect(Collectors.toList());     // MH
     }
 
     private static Location mapRow(ResultSet rs) throws SQLException {

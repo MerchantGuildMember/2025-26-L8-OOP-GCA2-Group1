@@ -7,7 +7,6 @@ import tables.RouteStop;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -33,7 +32,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
 
 
     @Override
-    public ServerResponse<ArrayList<RouteStop>> findAll() throws Exception {    // MH
+    public ServerResponse<ArrayList<RouteStop>> displayAll() throws Exception {    // MH
         String sql = "SELECT rs.id, rs.route_name, rs.created_at, " +
                 "l.id AS loc_id, l.latitude, l.longitude, l.full_address, l.created_at AS loc_created_at " +
                 "FROM route_stop rs " +
@@ -53,7 +52,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
     }
 
     @Override
-    public ServerResponse<RouteStop> findById(Long id) throws Exception {   // MH
+    public ServerResponse<RouteStop> displayById(Long id) throws Exception {   // MH
         if (id == null || id <= 0)
             return new ServerResponse<>("Error", "ID Error " + id, null);
 
@@ -137,7 +136,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
 
     @Override
     public List<RouteStop> findByFilter(Predicate<RouteStop> filter) throws Exception {
-        return findAll().getData().stream().filter(filter).collect(Collectors.toList());
+        return displayAll().getData().stream().filter(filter).collect(Collectors.toList());     // MH
     }
 
     private RouteStop mapRow(ResultSet rs) throws SQLException {
