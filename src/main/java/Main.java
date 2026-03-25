@@ -13,6 +13,7 @@ import java.util.Scanner;
  * Main method for interacting with the database in a visual manner.
  *
  * @author Aleksy Cieslak
+ * @author Maryna Hordiienko
  */
 public class Main {
 
