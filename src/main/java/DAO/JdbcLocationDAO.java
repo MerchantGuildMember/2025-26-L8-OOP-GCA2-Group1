@@ -1,5 +1,6 @@
 package DAO;
 
+import shared.ServerResponse;
 import tables.Location;
 
 import java.math.BigDecimal;
@@ -32,7 +33,7 @@ public class JdbcLocationDAO implements LocationDAO {
 
 
     @Override
-    public ArrayList<Location> findAll() throws Exception {
+    public ServerResponse<ArrayList<Location>> displayAll() throws Exception {
         String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location ORDER BY id";
 
         try (Connection c = open();
@@ -42,15 +43,16 @@ public class JdbcLocationDAO implements LocationDAO {
             ArrayList<Location> out = new ArrayList<>();
             while (rs.next())
                 out.add(mapRow(rs));
-            return out;
+            return new ServerResponse<>("Success", "Retrieved locations", out);
         }
 
     }
 
     @Override
-    public Optional<Location> findById(Long id) throws Exception {
+    public ServerResponse<Location> displayById(Long id) throws Exception {
         if (id == null || id <= 0)
-            return Optional.empty();
+            return new ServerResponse<>("Error", "ID Error " + id, null);
+
 
         String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location WHERE id = ?";
 
@@ -61,8 +63,8 @@ public class JdbcLocationDAO implements LocationDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next())
-                    return Optional.empty();
-                return Optional.of(mapRow(rs));
+                    return new ServerResponse<>("Error", "Location is not found ", null);
+                return new ServerResponse<>("Success", "Found location ", mapRow(rs));
             }
         }
     }
@@ -131,7 +133,7 @@ public class JdbcLocationDAO implements LocationDAO {
 
     @Override
     public List<Location> findByFilter(Predicate<Location> filter) throws Exception {
-        return findAll().stream().filter(filter).collect(Collectors.toList());
+        return displayAll().getData().stream().filter(filter).collect(Collectors.toList());
     }
 
     private static Location mapRow(ResultSet rs) throws SQLException {
@@ -142,21 +144,9 @@ public class JdbcLocationDAO implements LocationDAO {
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
         return new Location(id, latitude, longitude, fullAddress, createdAt);
     }
-
     @Override
-    public String locationToJson(Location location) {
-        return JsonUtil.toJson(location);
-    }
-
-    @Override
-    public Location locationFromJson(String json) {
+    public Location entFromJson(String json) {
         return JsonUtil.fromJson(json, Location.class);
     }
-
-    @Override
-    public String locationListToJson(List<Location> locations) {
-        return JsonUtil.listToJson(locations);
-    }
-
 
 }
