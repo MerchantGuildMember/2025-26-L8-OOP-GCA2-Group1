@@ -1,10 +1,12 @@
 import DAO.*;
+import client.ServerClient;
 import shared.ServerResponse;
 import tables.Location;
 import tables.RouteStop;
 import tables.Trail;
 import tables.TrailMedia;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -19,17 +21,13 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static final String URL  = System.getenv("URL");
-    private static final String USER = System.getenv("USER");
-    private static final String PASS = System.getenv("PASS");
+//    private static final String URL  = System.getenv("URL");
+//    private static final String USER = System.getenv("USER");
+//    private static final String PASS = System.getenv("PASS");
 
 
-    static LocationDAO locationDAO      = new JdbcLocationDAO(URL, USER, PASS);
-    static RouteStopDAO routeStopDAO    = new JdbcRouteStopDAO(URL, USER, PASS);
-    static TrailDAO trailDAO            = new JdbcTrailDAO(URL, USER, PASS);
-    static TrailMediaDAO trailMediaDAO  = new JdbcTrailMediaDAO(URL, USER, PASS);
-
-    static Scanner input                = new Scanner(System.in);
+    static ServerClient server = new ServerClient("localhost", 8080);
+    static Scanner input = new Scanner(System.in);
 
 
 
@@ -77,7 +75,7 @@ public class Main {
 
         Location newLocation = new Location(null, latitude, longitude, fullAddress, time);
         try {
-            locationDAO.insert(newLocation);
+            server.send(server.buildActionWithData("ADD_LOCATION", newLocation));
         } catch (Exception e) {
             throw new RuntimeException("Failed to insert location");
         }
@@ -95,13 +93,12 @@ public class Main {
         LocalDateTime time = LocalDateTime.now();
 
         try {
-            Location location = locationDAO.displayById(locationId).getData();
-            if (location == null)
-                throw new RuntimeException("Location not found: " + locationId);
+            String locResponse = server.send(server.buildActionWithId("GET_LOCATION_BY_ID", locationId));
+            System.out.println("\nServer response: " + locResponse);
 
-            RouteStop newRouteStop = new RouteStop(0L, routeName, location, time);
-            routeStopDAO.insert(newRouteStop);
-            System.out.println("\nInserted RouteStop: " + routeName + " at " + location.getFullAddress());
+            RouteStop newRouteStop = new RouteStop(0L, routeName, new Location(locationId, 0, 0, time), time);
+            String response = server.send(server.buildActionWithData("ADD_ROUTESTOP", newRouteStop));
+            System.out.println("\nInserted RouteStop: " + response);
         } catch (Exception e) {
             throw new RuntimeException("Failed to insert RouteStop: " + e.getMessage());
         }
@@ -129,13 +126,7 @@ public class Main {
         for (int i = 0; i < stopCount; i++) {
             System.out.print("Stop " + (i + 1) + " ID: ");
             Long stopId = input.nextLong(); input.nextLine();
-            try {
-                RouteStop stop = routeStopDAO.displayById(stopId).getData();
-                if (stop != null) stops.add(stop);
-                else System.out.println("Could not find stop with ID: " + stopId);
-            } catch (Exception e) {
-                System.out.println("Could not find stop with ID: " + stopId);
-            }
+            stops.add(new RouteStop(stopId, new Location(stopId, 0, 0, LocalDateTime.now()), LocalDateTime.now()));
         }
 
         if (stops.isEmpty()) {
@@ -146,8 +137,8 @@ public class Main {
 
         try {
             Trail newTrail = new Trail(0L, name, description, difficulty, estimatedTime, stops);
-            trailDAO.insert(newTrail);
-            System.out.println("\nInserted Trail: " + name + " with " + stops.size() + " stops");
+            String response = server.send(server.buildActionWithData("ADD_TRAIL", newTrail));
+            System.out.println("\nServer response: " + response);
         } catch (Exception e) {
             throw new RuntimeException("Failed to insert Trail: " + e.getMessage());
         }
@@ -177,7 +168,8 @@ public class Main {
 
         TrailMedia newTrailMedia = new TrailMedia(0L, trailId, stopId, mediaType, url, caption, time);
         try {
-            trailMediaDAO.insert(newTrailMedia);
+            String response = server.send(server.buildActionWithData("ADD_TRAILMEDIA", newTrailMedia));
+            System.out.println("\nServer response: " + response);
         } catch (Exception e) {
             throw new RuntimeException("Failed to insert TrailMedia: " + e.getMessage());
         }
@@ -196,172 +188,81 @@ public class Main {
     private static void readLocation() {
         System.out.println("ID | ALL");
         String choice = input.nextLine();
-        if (choice.equals("ALL")) {
-            ServerResponse<ArrayList<Location>> result = null;
-            try {
-                result = locationDAO.displayAll();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        try {
+            if (choice.equals("ALL")) {
+                String response = server.send(server.buildAction("GET_ALL_LOCATIONS"));
+                System.out.println(response);
+            } else if (choice.equals("ID")) {
+                System.out.print("Input ID: ");
+                Long id = input.nextLong(); input.nextLine();
+                String response = server.send(server.buildActionWithId("GET_LOCATION_BY_ID", id));
+                System.out.println(response);
+            } else {
+                System.out.println("Invalid choice");
             }
-            System.out.printf("%-5s %-12s %-12s %-30s%n", "ID", "Latitude", "Longitude", "Full Address");
-            System.out.println("-".repeat(62));
-            result.getData().forEach(location -> {
-                System.out.printf("%-5d %-12s %-12s %-30s%n",
-                        location.getId(),
-                        location.getLatitude(),
-                        location.getLongitude(),
-                        location.getFullAddress());
-            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        else if (choice.equals("ID")) {
-            System.out.print("Input ID: ");
-            Long id = input.nextLong(); input.nextLine();
-            try {
-                var result = locationDAO.displayById(id);
-                Location location = result.getData();
-                if (location == null) {
-                    System.out.println("Location not found: " + id);
-                } else {
-                    System.out.printf("%-5s %-12s %-12s %-30s%n", "ID", "Latitude", "Longitude", "Full Address");
-                    System.out.println("-".repeat(62));
-                    System.out.printf("%-5d %-12s %-12s %-30s%n",
-                            location.getId(),
-                            location.getLatitude(),
-                            location.getLongitude(),
-                            location.getFullAddress());
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        else System.out.println("Invalid choice");
         readMenu();
     }
     private static void readTrail() {
         System.out.println("ID | ALL");
         String choice = input.nextLine();
-        if (choice.equals("ALL")) {
-            try {
-                var result = trailDAO.displayAll();
-                System.out.printf("%-5s %-20s %-12s %-10s %-6s%n", "ID", "Name", "Difficulty", "Est. Time", "Stops");
-                System.out.println("-".repeat(56));
-                result.getData().forEach(trail ->
-                        System.out.printf("%-5d %-20s %-12s %-10s %-6d%n",
-                                trail.getId(),
-                                trail.getName(),
-                                trail.getDifficulty(),
-                                trail.getEstimated_time(),
-                                trail.getStops().size())
-                );
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        try {
+            if (choice.equals("ALL")) {
+                String response = server.send(server.buildAction("GET_ALL_TRAILS"));
+                System.out.println(response);
+            } else if (choice.equals("ID")) {
+                System.out.print("Input ID: ");
+                Long id = input.nextLong(); input.nextLine();
+                String response = server.send(server.buildActionWithId("GET_TRAIL_BY_ID", id));
+                System.out.println(response);
+            } else {
+                System.out.println("Invalid choice");
             }
-        } else if (choice.equals("ID")) {
-            System.out.print("Input ID: ");
-            Long id = input.nextLong(); input.nextLine();
-            try {
-                var result = trailDAO.displayById(id);
-                Trail trail = result.getData();
-                if (trail == null) {
-                    System.out.println("Trail not found: " + id);
-                } else {
-                    System.out.printf("%-5s %-20s %-12s %-10s %-6s%n", "ID", "Name", "Difficulty", "Est. Time", "Stops");
-                    System.out.println("-".repeat(56));
-                    System.out.printf("%-5d %-20s %-12s %-10s %-6d%n",
-                            trail.getId(),
-                            trail.getName(),
-                            trail.getDifficulty(),
-                            trail.getEstimated_time(),
-                            trail.getStops().size());
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        } else System.out.println("Invalid choice");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         readMenu();
     }
     private static void readTrailMedia() {
         System.out.println("ID | ALL");
         String choice = input.nextLine();
-        if (choice.equals("ALL")) {
-            try {
-                var result = trailMediaDAO.displayAll();
-                System.out.printf("%-5s %-10s %-10s %-10s %-30s %-20s%n", "ID", "Trail ID", "Stop ID", "Type", "URL", "Caption");
-                System.out.println("-".repeat(88));
-                result.getData().forEach(media ->
-                        System.out.printf("%-5d %-10d %-10s %-10s %-30s %-20s%n",
-                                media.getId(),
-                                media.getTrail_id(),
-                                media.getStop_id() != null ? media.getStop_id() : "-",
-                                media.getMedia_type(),
-                                media.getUrl(),
-                                media.getCaption())
-                );
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        try {
+            if (choice.equals("ALL")) {
+                String response = server.send(server.buildAction("GET_ALL_TRAILMEDIA"));
+                System.out.println(response);
+            } else if (choice.equals("ID")) {
+                System.out.print("Input ID: ");
+                Long id = input.nextLong(); input.nextLine();
+                String response = server.send(server.buildActionWithId("GET_TRAILMEDIA_BY_ID", id));
+                System.out.println(response);
+            } else {
+                System.out.println("Invalid choice");
             }
-        } else if (choice.equals("ID")) {
-            System.out.print("Input ID: ");
-            Long id = input.nextLong(); input.nextLine();
-            try {
-                var result = trailMediaDAO.displayById(id);
-                TrailMedia media = result.getData();
-                if (media == null) {
-                    System.out.println("TrailMedia not found: " + id);
-                } else {
-                    System.out.printf("%-5s %-10s %-10s %-10s %-30s %-20s%n", "ID", "Trail ID", "Stop ID", "Type", "URL", "Caption");
-                    System.out.println("-".repeat(88));
-                    System.out.printf("%-5d %-10d %-10s %-10s %-30s %-20s%n",
-                            media.getId(),
-                            media.getTrail_id(),
-                            media.getStop_id() != null ? media.getStop_id() : "-",
-                            media.getMedia_type(),
-                            media.getUrl(),
-                            media.getCaption());
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        } else System.out.println("Invalid choice");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         readMenu();
     }
     private static void readRouteStop() {
         System.out.println("ID | ALL");
         String choice = input.nextLine();
-        if (choice.equals("ALL")) {
-            try {
-                var result = routeStopDAO.displayAll();
-                System.out.printf("%-5s %-20s %-30s%n", "ID", "Route Name", "Location");
-                System.out.println("-".repeat(57));
-                result.getData().forEach(stop ->
-                        System.out.printf("%-5d %-20s %-30s%n",
-                                stop.getId(),
-                                stop.getRoute_name(),
-                                stop.getLocation().getFullAddress())
-                );
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        try {
+            if (choice.equals("ALL")) {
+                String response = server.send(server.buildAction("GET_ALL_ROUTESTOPS"));
+                System.out.println(response);
+            } else if (choice.equals("ID")) {
+                System.out.print("Input ID: ");
+                Long id = input.nextLong(); input.nextLine();
+                String response = server.send(server.buildActionWithId("GET_ROUTESTOP_BY_ID", id));
+                System.out.println(response);
+            } else {
+                System.out.println("Invalid choice");
             }
-        } else if (choice.equals("ID")) {
-            System.out.print("Input ID: ");
-            Long id = input.nextLong(); input.nextLine();
-            try {
-                var result = routeStopDAO.displayById(id);
-                RouteStop stop = result.getData();
-                if (stop == null) {
-                    System.out.println("RouteStop not found: " + id);
-                } else {
-                    System.out.printf("%-5s %-20s %-30s%n", "ID", "Route Name", "Location");
-                    System.out.println("-".repeat(57));
-                    System.out.printf("%-5d %-20s %-30s%n",
-                            stop.getId(),
-                            stop.getRoute_name(),
-                            stop.getLocation().getFullAddress());
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        } else System.out.println("Invalid choice");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         readMenu();
     }
 
@@ -378,92 +279,54 @@ public class Main {
         System.out.println("Enter ID of entity you wish to update: ");
         Long id = input.nextLong(); input.nextLine();
 
-        Location location;
         try {
-            var result = locationDAO.displayById(id);
-            location = result.getData();
-            if (location == null) {
-                System.out.println("Location not found: " + id);
-            } else {
-                System.out.printf("%-5s %-12s %-12s %-30s%n", "ID", "Latitude", "Longitude", "Full Address");
-                System.out.println("-".repeat(62));
-                System.out.printf("%-5d %-12s %-12s %-30s%n",
-                        location.getId(),
-                        location.getLatitude(),
-                        location.getLongitude(),
-                        location.getFullAddress());
-            }
-        } catch (Exception e) {
+            String current = server.send(server.buildActionWithId("GET_LOCATION_BY_ID", id));
+            System.out.println("Current: " + current);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.print("\nLatitude (leave blank to keep): ");
-        String latInput = input.nextLine();
-        Double latitude = latInput.isBlank() ? location.getLatitude().doubleValue() : Double.parseDouble(latInput);
 
-        System.out.print("\nLongitude (leave blank to keep): ");
-        String lonInput = input.nextLine();
-        Double longitude = lonInput.isBlank() ? location.getLongitude().doubleValue() : Double.parseDouble(lonInput);
-
-        System.out.print("\nFull Address (leave blank to keep): ");
+        System.out.print("\nLatitude: ");
+        Double latitude = input.nextDouble(); input.nextLine();
+        System.out.print("\nLongitude: ");
+        Double longitude = input.nextDouble(); input.nextLine();
+        System.out.print("\nFull Address: ");
         String fullAddress = input.nextLine();
-        if (fullAddress.isBlank()) fullAddress = location.getFullAddress();
 
-        Location updated = new Location(id, latitude, longitude, fullAddress, location.getCreationTime());
+        Location updated = new Location(id, latitude, longitude, fullAddress, LocalDateTime.now());
         try {
-            locationDAO.update(updated);
-            System.out.println("\nLocation updated successfully.");
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to update location");
+            String response = server.send(server.buildActionWithData("UPDATE_LOCATION", updated));
+            System.out.println("\nServer response: " + response);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to update location: " + e.getMessage());
         }
         updateMenu();
-
-
-
     }
     private static void updateTrail() {
         System.out.println("Enter ID of entity you wish to update: ");
         Long id = input.nextLong(); input.nextLine();
 
-        Trail trail;
         try {
-            var result = trailDAO.displayById(id);
-            trail = result.getData();
-            if (trail == null) {
-                System.out.println("Trail not found: " + id);
-            } else {
-                System.out.printf("%-5s %-20s %-12s %-10s %-6s%n", "ID", "Name", "Difficulty", "Est. Time", "Stops");
-                System.out.println("-".repeat(56));
-                System.out.printf("%-5d %-20s %-12s %-10s %-6d%n",
-                        trail.getId(),
-                        trail.getName(),
-                        trail.getDifficulty(),
-                        trail.getEstimated_time(),
-                        trail.getStops().size());
-            }
-        } catch (Exception e) {
+            String current = server.send(server.buildActionWithId("GET_TRAIL_BY_ID", id));
+            System.out.println("Current: " + current);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.print("\nName (leave blank to keep): ");
-        String nameInput = input.nextLine();
-        String name = nameInput.isBlank() ? trail.getName() : nameInput;
 
-        System.out.print("\nDescription (leave blank to keep): ");
-        String descriptionInput = input.nextLine();
-        String description = descriptionInput.isBlank() ? trail.getDescription() : descriptionInput;
+        System.out.print("\nName: ");
+        String name = input.nextLine();
+        System.out.print("\nDescription: ");
+        String description = input.nextLine();
+        System.out.print("\nDifficulty: ");
+        String difficulty = input.nextLine();
+        System.out.print("\nEstimated Time (hours): ");
+        Double estimatedTime = input.nextDouble(); input.nextLine();
 
-        System.out.print("\nDifficulty (leave blank to keep): ");
-        String difficultyInput = input.nextLine();
-        String difficulty =  difficultyInput.isBlank() ? trail.getDifficulty() : difficultyInput;
-
-        System.out.print("\nEstimated Time (leave blank to keep): ");
-        String estimatedTimeInput = input.nextLine();
-        Double estimatedTime =  estimatedTimeInput.isBlank() ? trail.getEstimated_time() : Double.parseDouble(estimatedTimeInput);
-
-        Trail updated = new Trail(id, name, description, difficulty, estimatedTime, trail.getStops());
+        Trail updated = new Trail(id, name, description, difficulty, estimatedTime, new ArrayList<>());
         try {
-            trailDAO.update(updated);
-            System.out.println("\nTrail updated successfully.");
-        } catch (Exception e) {
+            String response = server.send(server.buildActionWithData("UPDATE_TRAIL", updated));
+            System.out.println("\nServer response: " + response);
+        } catch (IOException e) {
             throw new RuntimeException("Failed to update trail: " + e.getMessage());
         }
         updateMenu();
@@ -472,46 +335,30 @@ public class Main {
         System.out.println("Enter ID of entity you wish to update: ");
         Long id = input.nextLong(); input.nextLine();
 
-        TrailMedia media;
         try {
-            var result = trailMediaDAO.displayById(id);
-            media = result.getData();
-            if (media == null) {
-                System.out.println("TrailMedia not found: " + id);
-                updateMenu();
-                return;
-            }
-            System.out.printf("%-5s %-10s %-10s %-10s %-30s %-20s%n", "ID", "Trail ID", "Stop ID", "Type", "URL", "Caption");
-            System.out.println("-".repeat(88));
-            System.out.printf("%-5d %-10d %-10s %-10s %-30s %-20s%n",
-                    media.getId(), media.getTrail_id(),
-                    media.getStop_id() != null ? media.getStop_id() : "-",
-                    media.getMedia_type(), media.getUrl(), media.getCaption());
-        } catch (Exception e) {
+            String current = server.send(server.buildActionWithId("GET_TRAILMEDIA_BY_ID", id));
+            System.out.println("Current: " + current);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.print("\nMedia Type (leave blank to keep): ");
-        String mediaTypeInput = input.nextLine();
-        String mediaType = mediaTypeInput.isBlank() ? media.getMedia_type() : mediaTypeInput;
-
-        System.out.print("\nURL (leave blank to keep): ");
-        String urlInput = input.nextLine();
-        String url = urlInput.isBlank() ? media.getUrl() : urlInput;
-
-        System.out.print("\nCaption (leave blank to keep): ");
-        String captionInput = input.nextLine();
-        String caption = captionInput.isBlank() ? media.getCaption() : captionInput;
-
-        System.out.print("\nStop ID (leave blank to keep): ");
+        System.out.print("\nMedia Type: ");
+        String mediaType = input.nextLine();
+        System.out.print("\nURL: ");
+        String url = input.nextLine();
+        System.out.print("\nCaption: ");
+        String caption = input.nextLine();
+        System.out.print("\nTrail ID: ");
+        Long trailId = input.nextLong(); input.nextLine();
+        System.out.print("\nStop ID (leave blank if none): ");
         String stopInput = input.nextLine();
-        Long stopId = stopInput.isBlank() ? media.getStop_id() : Long.parseLong(stopInput);
+        Long stopId = stopInput.isBlank() ? null : Long.parseLong(stopInput);
 
-        TrailMedia updated = new TrailMedia(id, media.getTrail_id(), stopId, mediaType, url, caption, media.getCreation_time());
+        TrailMedia updated = new TrailMedia(id, trailId, stopId, mediaType, url, caption, LocalDateTime.now());
         try {
-            trailMediaDAO.update(updated);
-            System.out.println("\nTrailMedia updated successfully.");
-        } catch (Exception e) {
+            String response = server.send(server.buildActionWithData("UPDATE_TRAILMEDIA", updated));
+            System.out.println("\nServer response: " + response);
+        } catch (IOException e) {
             throw new RuntimeException("Failed to update TrailMedia: " + e.getMessage());
         }
         updateMenu();
@@ -520,47 +367,23 @@ public class Main {
         System.out.println("Enter ID of entity you wish to update: ");
         Long id = input.nextLong(); input.nextLine();
 
-        RouteStop stop;
         try {
-            var result = routeStopDAO.displayById(id);
-            stop = result.getData();
-            if (stop == null) {
-                System.out.println("RouteStop not found: " + id);
-                updateMenu();
-                return;
-            }
-            System.out.printf("%-5s %-20s %-30s%n", "ID", "Route Name", "Location");
-            System.out.println("-".repeat(57));
-            System.out.printf("%-5d %-20s %-30s%n",
-                    stop.getId(), stop.getRoute_name(), stop.getLocation().getFullAddress());
-        } catch (Exception e) {
+            String current = server.send(server.buildActionWithId("GET_ROUTESTOP_BY_ID", id));
+            System.out.println("Current: " + current);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.print("\nRoute Name (leave blank to keep): ");
-        String nameInput = input.nextLine();
-        String routeName = nameInput.isBlank() ? stop.getRoute_name() : nameInput;
+        System.out.print("\nRoute Name: ");
+        String routeName = input.nextLine();
+        System.out.print("\nLocation ID: ");
+        Long locationId = input.nextLong(); input.nextLine();
 
-        System.out.print("\nLocation ID (leave blank to keep): ");
-        String locationInput = input.nextLine();
-        Location location = stop.getLocation();
-        if (!locationInput.isBlank()) {
-            try {
-                location = locationDAO.displayById(Long.parseLong(locationInput)).getData();
-                if (location == null) {
-                    System.out.println("Location not found, keeping existing.");
-                    location = stop.getLocation();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to find location: " + e.getMessage());
-            }
-        }
-
-        RouteStop updated = new RouteStop(id, routeName, location, stop.getCreated_at());
+        RouteStop updated = new RouteStop(id, routeName, new Location(locationId, 0, 0, LocalDateTime.now()), LocalDateTime.now());
         try {
-            routeStopDAO.update(updated);
-            System.out.println("\nRouteStop updated successfully.");
-        } catch (Exception e) {
+            String response = server.send(server.buildActionWithData("UPDATE_ROUTESTOP", updated));
+            System.out.println("\nServer response: " + response);
+        } catch (IOException e) {
             throw new RuntimeException("Failed to update RouteStop: " + e.getMessage());
         }
         updateMenu();
@@ -579,120 +402,68 @@ public class Main {
     private static void deleteLocation() {
         System.out.println("Enter ID of location to delete: ");
         Long id = input.nextLong(); input.nextLine();
-
-        try {
-            Location location = locationDAO.displayById(id).getData();
-            if (location == null) {
-                System.out.println("Location not found: " + id);
-                deleteMenu();
-                return;
+        System.out.print("Are you sure? (y/n): ");
+        String confirm = input.nextLine();
+        if (confirm.equalsIgnoreCase("y")) {
+            try {
+                String response = server.send(server.buildActionWithId("DELETE_LOCATION", id));
+                System.out.println("Server response: " + response);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to delete location: " + e.getMessage());
             }
-            System.out.printf("%-5s %-12s %-12s %-30s%n", "ID", "Latitude", "Longitude", "Full Address");
-            System.out.println("-".repeat(62));
-            System.out.printf("%-5d %-12s %-12s %-30s%n",
-                    location.getId(), location.getLatitude(),
-                    location.getLongitude(), location.getFullAddress());
-
-            System.out.print("\nAre you sure? (y/n): ");
-            String confirm = input.nextLine();
-            if (confirm.equalsIgnoreCase("y")) {
-                locationDAO.deleteById(id);
-                System.out.println("Location deleted successfully.");
-            } else {
-                System.out.println("Cancelled.");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to delete location: " + e.getMessage());
+        } else {
+            System.out.println("Cancelled.");
         }
         deleteMenu();
     }
     private static void deleteRouteStop() {
         System.out.println("Enter ID of RouteStop to delete: ");
         Long id = input.nextLong(); input.nextLine();
-
-        try {
-            RouteStop stop = routeStopDAO.displayById(id).getData();
-            if (stop == null) {
-                System.out.println("RouteStop not found: " + id);
-                deleteMenu();
-                return;
+        System.out.print("Are you sure? (y/n): ");
+        String confirm = input.nextLine();
+        if (confirm.equalsIgnoreCase("y")) {
+            try {
+                String response = server.send(server.buildActionWithId("DELETE_ROUTESTOP", id));
+                System.out.println("Server response: " + response);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to delete RouteStop: " + e.getMessage());
             }
-            System.out.printf("%-5s %-20s %-30s%n", "ID", "Route Name", "Location");
-            System.out.println("-".repeat(57));
-            System.out.printf("%-5d %-20s %-30s%n",
-                    stop.getId(), stop.getRoute_name(), stop.getLocation().getFullAddress());
-
-            System.out.print("\nAre you sure? (y/n): ");
-            String confirm = input.nextLine();
-            if (confirm.equalsIgnoreCase("y")) {
-                routeStopDAO.deleteById(id);
-                System.out.println("RouteStop deleted successfully.");
-            } else {
-                System.out.println("Cancelled.");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to delete RouteStop: " + e.getMessage());
+        } else {
+            System.out.println("Cancelled.");
         }
         deleteMenu();
     }
     private static void deleteTrail() {
         System.out.println("Enter ID of trail to delete: ");
         Long id = input.nextLong(); input.nextLine();
-
-        try {
-            Trail trail = trailDAO.displayById(id).getData();
-            if (trail == null) {
-                System.out.println("Trail not found: " + id);
-                deleteMenu();
-                return;
+        System.out.print("Are you sure? (y/n): ");
+        String confirm = input.nextLine();
+        if (confirm.equalsIgnoreCase("y")) {
+            try {
+                String response = server.send(server.buildActionWithId("DELETE_TRAIL", id));
+                System.out.println("Server response: " + response);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to delete trail: " + e.getMessage());
             }
-            System.out.printf("%-5s %-20s %-12s %-10s %-6s%n", "ID", "Name", "Difficulty", "Est. Time", "Stops");
-            System.out.println("-".repeat(56));
-            System.out.printf("%-5d %-20s %-12s %-10s %-6d%n",
-                    trail.getId(), trail.getName(), trail.getDifficulty(),
-                    trail.getEstimated_time(), trail.getStops().size());
-
-            System.out.print("\nAre you sure? (y/n): ");
-            String confirm = input.nextLine();
-            if (confirm.equalsIgnoreCase("y")) {
-                trailDAO.deleteById(id);
-                System.out.println("Trail deleted successfully.");
-            } else {
-                System.out.println("Cancelled.");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to delete trail: " + e.getMessage());
+        } else {
+            System.out.println("Cancelled.");
         }
         deleteMenu();
     }
     private static void deleteTrailMedia() {
         System.out.println("Enter ID of TrailMedia to delete: ");
         Long id = input.nextLong(); input.nextLine();
-
-        try {
-            TrailMedia media = trailMediaDAO.displayById(id).getData();
-            if (media == null) {
-                System.out.println("TrailMedia not found: " + id);
-                deleteMenu();
-                return;
+        System.out.print("Are you sure? (y/n): ");
+        String confirm = input.nextLine();
+        if (confirm.equalsIgnoreCase("y")) {
+            try {
+                String response = server.send(server.buildActionWithId("DELETE_TRAILMEDIA", id));
+                System.out.println("Server response: " + response);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to delete TrailMedia: " + e.getMessage());
             }
-            System.out.printf("%-5s %-10s %-10s %-10s %-30s %-20s%n", "ID", "Trail ID", "Stop ID", "Type", "URL", "Caption");
-            System.out.println("-".repeat(88));
-            System.out.printf("%-5d %-10d %-10s %-10s %-30s %-20s%n",
-                    media.getId(), media.getTrail_id(),
-                    media.getStop_id() != null ? media.getStop_id() : "-",
-                    media.getMedia_type(), media.getUrl(), media.getCaption());
-
-            System.out.print("\nAre you sure? (y/n): ");
-            String confirm = input.nextLine();
-            if (confirm.equalsIgnoreCase("y")) {
-                trailMediaDAO.deleteById(id);
-                System.out.println("TrailMedia deleted successfully.");
-            } else {
-                System.out.println("Cancelled.");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to delete TrailMedia: " + e.getMessage());
+        } else {
+            System.out.println("Cancelled.");
         }
         deleteMenu();
     }
