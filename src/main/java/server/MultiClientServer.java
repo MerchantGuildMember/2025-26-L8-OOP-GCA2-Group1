@@ -32,7 +32,7 @@ public class MultiClientServer<T> {
             while (true) {
                 Socket clientSocket = serverSocket.accept();    // block until a client arrives
                 System.out.println("Accepted: " + clientSocket.getInetAddress());
-                _pool.submit(new ClientHandler<T>(clientSocket, _dao)); // hand off to pool
+//                _pool.submit(new ClientHandler(clientSocket, _dao)); // hand off to pool
             }
         }
     }
