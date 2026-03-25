@@ -13,7 +13,7 @@ import java.util.function.Predicate;
  * them directly to the client without any extra wrapping.
  *
  * @param <T> the entity type managed by this DAO
- * @author Maryna Hordiienko (primary)
+ * @author Maryna Hordiienko
  */
 public interface DAO<T> {
 

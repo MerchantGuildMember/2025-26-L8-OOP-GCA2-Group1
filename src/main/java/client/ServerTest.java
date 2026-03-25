@@ -23,16 +23,16 @@ import java.util.ArrayList;
  * <p>Tests displayAll() and displayById() for Location, RouteStop, Trail,
  * and TrailMedia. Also tests insert(), update(), and deleteById() for
  * Location to verify full CRUD works end-to-end.</p>
- *
+ * <p>
  * Run this BEFORE starting the server to verify the database connection
  * and DAO layer are working correctly.
  *
- * @author smoke test
+ * @author Maryna Hordiienko
  */
 public class ServerTest {
 
     // === Fields ===
-    private static final String URL  = System.getenv("URL");
+    private static final String URL = System.getenv("URL");
     private static final String USER = System.getenv("USER");
     private static final String PASS = System.getenv("PASS");
 
@@ -287,9 +287,9 @@ public class ServerTest {
         System.out.println("╔══════════════════════════════════════╗");
         System.out.println("║             RESULTS                  ║");
         System.out.println("╠══════════════════════════════════════╣");
-        System.out.printf( "║  Total:   %-28d ║%n", total);
-        System.out.printf( "║  ✔️ Passed: %-27d ║%n", fPassed);
-        System.out.printf( "║  ✘ Failed: %-27d ║%n", fFailed);
+        System.out.printf("║  Total:   %-28d ║%n", total);
+        System.out.printf("║  ✔️ Passed: %-27d ║%n", fPassed);
+        System.out.printf("║  ✘ Failed: %-27d ║%n", fFailed);
         System.out.println("╠══════════════════════════════════════╣");
         if (fFailed == 0) {
             System.out.println("║       ALL TESTS PASSED ✔️             ║");

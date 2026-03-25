@@ -8,7 +8,6 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -144,6 +143,7 @@ public class JdbcLocationDAO implements LocationDAO {
         LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
         return new Location(id, latitude, longitude, fullAddress, createdAt);
     }
+
     @Override
     public Location entFromJson(String json) {
         return JsonUtil.fromJson(json, Location.class);

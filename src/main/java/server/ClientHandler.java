@@ -58,10 +58,10 @@ public class ClientHandler implements Runnable {
         if (dbUrl == null || dbUrl.isBlank())
             throw new IllegalArgumentException("dbUrl is required");
 
-        fClientSocket  = clientSocket;
-        fLocationDAO   = new JdbcLocationDAO(dbUrl, dbUser, dbPass);
-        fTrailDAO      = new JdbcTrailDAO(dbUrl, dbUser, dbPass);
-        fRouteStopDAO  = new JdbcRouteStopDAO(dbUrl, dbUser, dbPass);
+        fClientSocket = clientSocket;
+        fLocationDAO = new JdbcLocationDAO(dbUrl, dbUser, dbPass);
+        fTrailDAO = new JdbcTrailDAO(dbUrl, dbUser, dbPass);
+        fRouteStopDAO = new JdbcRouteStopDAO(dbUrl, dbUser, dbPass);
         fTrailMediaDAO = new JdbcTrailMediaDAO(dbUrl, dbUser, dbPass);
         fGson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class,
@@ -79,8 +79,8 @@ public class ClientHandler implements Runnable {
         System.out.println("[" + thread + "] Connected: " + fClientSocket.getInetAddress());
 
         try (Socket socket = fClientSocket;
-             BufferedReader in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter    out = new PrintWriter(socket.getOutputStream(), true)) {
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -92,8 +92,7 @@ public class ClientHandler implements Runnable {
                 out.println(response);
             }
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println("[" + thread + "] IO error: " + e.getMessage());
         }
 
@@ -104,8 +103,8 @@ public class ClientHandler implements Runnable {
     // Dispatches: parses the action field and calls the matching handler method
     private String dispatch(String requestJson) {
         try {
-            JsonObject req    = JsonParser.parseString(requestJson).getAsJsonObject();
-            String     action = req.get("action").getAsString();
+            JsonObject req = JsonParser.parseString(requestJson).getAsJsonObject();
+            String action = req.get("action").getAsString();
 
             switch (action) {
 
@@ -233,8 +232,7 @@ public class ClientHandler implements Runnable {
                     return toJson(ServerResponse.<Void>error("Unknown action: " + action));
             }
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return toJson(ServerResponse.<Void>error("Server error: " + e.getMessage()));
         }
     }

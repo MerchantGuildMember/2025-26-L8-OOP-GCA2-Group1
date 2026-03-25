@@ -59,7 +59,6 @@ public class JdbcTrailDAO implements TrailDAO {
         }
 
 
-
         return new ServerResponse<>("Success", "Retrieve trails", trails);
     }
 
@@ -250,6 +249,7 @@ public class JdbcTrailDAO implements TrailDAO {
         }
         return stops;
     }
+
     @Override
     public Trail entFromJson(String json) {
         return JsonUtil.fromJson(json, Trail.class);

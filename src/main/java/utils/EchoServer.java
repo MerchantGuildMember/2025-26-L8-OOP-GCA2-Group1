@@ -3,6 +3,14 @@ package utils;
 import java.io.*;
 import java.net.*;
 
+/**
+ *
+ * Echo Server
+ *
+ * @author Aleksy Cieslak
+ */
+
+
 public class EchoServer {
 
     // === Fields ===
@@ -26,7 +34,7 @@ public class EchoServer {
             System.out.println("Client connected: " + clientSocket.getInetAddress());
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                 PrintWriter out  = new PrintWriter(clientSocket.getOutputStream(), true)) {
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
                 String line;
                 while ((line = in.readLine()) != null) {

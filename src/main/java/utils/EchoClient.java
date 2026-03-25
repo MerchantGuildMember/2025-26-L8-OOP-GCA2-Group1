@@ -3,6 +3,13 @@ package utils;
 import java.io.*;
 import java.net.*;
 
+/**
+ *
+ * Echo Client
+ *
+ * @author Aleksy Cieslak
+ */
+
 public class EchoClient {
 
     // === Fields ===
@@ -22,8 +29,8 @@ public class EchoClient {
     // Connects: sends a test message and prints the reply
     public void run() throws IOException {
         try (Socket socket = new Socket(_host, _port);
-             BufferedReader in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter out    = new PrintWriter(socket.getOutputStream(), true)) {
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
             out.println("hello server");      // send
             String reply = in.readLine();     // receive (blocks until a line arrives)
