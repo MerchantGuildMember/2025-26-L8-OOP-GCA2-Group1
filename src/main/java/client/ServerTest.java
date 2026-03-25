@@ -32,10 +32,9 @@ import java.util.ArrayList;
 public class ServerTest {
 
     // === Fields ===
-    private static final String URL  =
-            "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-    private static final String USER = "oop_gca2";
-    private static final String PASS = "one";
+    private static final String URL  = System.getenv("URL");
+    private static final String USER = System.getenv("USER");
+    private static final String PASS = System.getenv("PASS");
 
     private static int fPassed = 0;
     private static int fFailed = 0;
