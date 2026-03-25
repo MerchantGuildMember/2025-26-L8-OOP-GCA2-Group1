@@ -9,6 +9,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * Main method for interacting with the database in a visual manner.
+ *
+ * @author Aleksy Cieslak
+ *
+ *
+ */
+
 public class Main {
 
     private static final String URL  = System.getenv("URL");
@@ -75,7 +83,6 @@ public class Main {
         }
         createMenu();
     }
-
     private static void addNewRouteStop() {
         System.out.println("Entering New RouteStop");
 
@@ -100,7 +107,6 @@ public class Main {
         }
         createMenu();
     }
-
     private static void addNewTrail() {
         System.out.println("Entering New Trail");
 
@@ -147,7 +153,6 @@ public class Main {
         }
         createMenu();
     }
-
     private static void addNewTrailMedia() {
         System.out.println("Entering New TrailMedia");
 
@@ -232,7 +237,6 @@ public class Main {
         else System.out.println("Invalid choice");
         readMenu();
     }
-
     private static void readTrail() {
         System.out.println("ID | ALL");
         String choice = input.nextLine();
@@ -276,7 +280,6 @@ public class Main {
         } else System.out.println("Invalid choice");
         readMenu();
     }
-
     private static void readTrailMedia() {
         System.out.println("ID | ALL");
         String choice = input.nextLine();
@@ -322,7 +325,6 @@ public class Main {
         } else System.out.println("Invalid choice");
         readMenu();
     }
-
     private static void readRouteStop() {
         System.out.println("ID | ALL");
         String choice = input.nextLine();
@@ -574,10 +576,126 @@ public class Main {
 //
 //
 
-    private static void deleteLocation() {}
-    private static void deleteTrail() {}
-    private static void deleteTrailMedia() {}
-    private static void deleteRouteStop() {}
+    private static void deleteLocation() {
+        System.out.println("Enter ID of location to delete: ");
+        Long id = input.nextLong(); input.nextLine();
+
+        try {
+            Location location = locationDAO.displayById(id).getData();
+            if (location == null) {
+                System.out.println("Location not found: " + id);
+                deleteMenu();
+                return;
+            }
+            System.out.printf("%-5s %-12s %-12s %-30s%n", "ID", "Latitude", "Longitude", "Full Address");
+            System.out.println("-".repeat(62));
+            System.out.printf("%-5d %-12s %-12s %-30s%n",
+                    location.getId(), location.getLatitude(),
+                    location.getLongitude(), location.getFullAddress());
+
+            System.out.print("\nAre you sure? (y/n): ");
+            String confirm = input.nextLine();
+            if (confirm.equalsIgnoreCase("y")) {
+                locationDAO.deleteById(id);
+                System.out.println("Location deleted successfully.");
+            } else {
+                System.out.println("Cancelled.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete location: " + e.getMessage());
+        }
+        deleteMenu();
+    }
+    private static void deleteRouteStop() {
+        System.out.println("Enter ID of RouteStop to delete: ");
+        Long id = input.nextLong(); input.nextLine();
+
+        try {
+            RouteStop stop = routeStopDAO.displayById(id).getData();
+            if (stop == null) {
+                System.out.println("RouteStop not found: " + id);
+                deleteMenu();
+                return;
+            }
+            System.out.printf("%-5s %-20s %-30s%n", "ID", "Route Name", "Location");
+            System.out.println("-".repeat(57));
+            System.out.printf("%-5d %-20s %-30s%n",
+                    stop.getId(), stop.getRoute_name(), stop.getLocation().getFullAddress());
+
+            System.out.print("\nAre you sure? (y/n): ");
+            String confirm = input.nextLine();
+            if (confirm.equalsIgnoreCase("y")) {
+                routeStopDAO.deleteById(id);
+                System.out.println("RouteStop deleted successfully.");
+            } else {
+                System.out.println("Cancelled.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete RouteStop: " + e.getMessage());
+        }
+        deleteMenu();
+    }
+    private static void deleteTrail() {
+        System.out.println("Enter ID of trail to delete: ");
+        Long id = input.nextLong(); input.nextLine();
+
+        try {
+            Trail trail = trailDAO.displayById(id).getData();
+            if (trail == null) {
+                System.out.println("Trail not found: " + id);
+                deleteMenu();
+                return;
+            }
+            System.out.printf("%-5s %-20s %-12s %-10s %-6s%n", "ID", "Name", "Difficulty", "Est. Time", "Stops");
+            System.out.println("-".repeat(56));
+            System.out.printf("%-5d %-20s %-12s %-10s %-6d%n",
+                    trail.getId(), trail.getName(), trail.getDifficulty(),
+                    trail.getEstimated_time(), trail.getStops().size());
+
+            System.out.print("\nAre you sure? (y/n): ");
+            String confirm = input.nextLine();
+            if (confirm.equalsIgnoreCase("y")) {
+                trailDAO.deleteById(id);
+                System.out.println("Trail deleted successfully.");
+            } else {
+                System.out.println("Cancelled.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete trail: " + e.getMessage());
+        }
+        deleteMenu();
+    }
+    private static void deleteTrailMedia() {
+        System.out.println("Enter ID of TrailMedia to delete: ");
+        Long id = input.nextLong(); input.nextLine();
+
+        try {
+            TrailMedia media = trailMediaDAO.displayById(id).getData();
+            if (media == null) {
+                System.out.println("TrailMedia not found: " + id);
+                deleteMenu();
+                return;
+            }
+            System.out.printf("%-5s %-10s %-10s %-10s %-30s %-20s%n", "ID", "Trail ID", "Stop ID", "Type", "URL", "Caption");
+            System.out.println("-".repeat(88));
+            System.out.printf("%-5d %-10d %-10s %-10s %-30s %-20s%n",
+                    media.getId(), media.getTrail_id(),
+                    media.getStop_id() != null ? media.getStop_id() : "-",
+                    media.getMedia_type(), media.getUrl(), media.getCaption());
+
+            System.out.print("\nAre you sure? (y/n): ");
+            String confirm = input.nextLine();
+            if (confirm.equalsIgnoreCase("y")) {
+                trailMediaDAO.deleteById(id);
+                System.out.println("TrailMedia deleted successfully.");
+            } else {
+                System.out.println("Cancelled.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete TrailMedia: " + e.getMessage());
+        }
+        deleteMenu();
+    }
 
 //      __  __ ______ _   _ _    _  _____
 //     |  \/  |  ____| \ | | |  | |/ ____|
@@ -601,7 +719,6 @@ public class Main {
         }
         route(choice);
     }
-
     static void createMenu() {
         System.out.println("___________Crud___________");
         System.out.println("1. Add new Location");
@@ -621,7 +738,6 @@ public class Main {
         route(choice+6);
 
     }
-
     static void readMenu() {
         System.out.println("___________cRud___________");
         System.out.println("1. Read Location");
@@ -640,7 +756,6 @@ public class Main {
         if(choice == 5) { displayCRUD(); return; }
         route(choice+10);
     }
-
     static void updateMenu() {
         System.out.println("___________crUd___________");
         System.out.println("1. Update Location");
@@ -678,7 +793,7 @@ public class Main {
         if(choice == 5) { displayCRUD(); return; }
 
 
-        route(choice+14);
+        route(choice+18);
     }
 
 
