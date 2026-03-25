@@ -419,13 +419,149 @@ public class Main {
 
     }
     private static void updateTrail() {
+        System.out.println("Enter ID of entity you wish to update: ");
+        Long id = input.nextLong(); input.nextLine();
 
+        Trail trail;
+        try {
+            var result = trailDAO.displayById(id);
+            trail = result.getData();
+            if (trail == null) {
+                System.out.println("Trail not found: " + id);
+            } else {
+                System.out.printf("%-5s %-20s %-12s %-10s %-6s%n", "ID", "Name", "Difficulty", "Est. Time", "Stops");
+                System.out.println("-".repeat(56));
+                System.out.printf("%-5d %-20s %-12s %-10s %-6d%n",
+                        trail.getId(),
+                        trail.getName(),
+                        trail.getDifficulty(),
+                        trail.getEstimated_time(),
+                        trail.getStops().size());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        System.out.print("\nName (leave blank to keep): ");
+        String nameInput = input.nextLine();
+        String name = nameInput.isBlank() ? trail.getName() : nameInput;
+
+        System.out.print("\nDescription (leave blank to keep): ");
+        String descriptionInput = input.nextLine();
+        String description = descriptionInput.isBlank() ? trail.getDescription() : descriptionInput;
+
+        System.out.print("\nDifficulty (leave blank to keep): ");
+        String difficultyInput = input.nextLine();
+        String difficulty =  difficultyInput.isBlank() ? trail.getDifficulty() : difficultyInput;
+
+        System.out.print("\nEstimated Time (leave blank to keep): ");
+        String estimatedTimeInput = input.nextLine();
+        Double estimatedTime =  estimatedTimeInput.isBlank() ? trail.getEstimated_time() : Double.parseDouble(estimatedTimeInput);
+
+        Trail updated = new Trail(id, name, description, difficulty, estimatedTime, trail.getStops());
+        try {
+            trailDAO.update(updated);
+            System.out.println("\nTrail updated successfully.");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update trail: " + e.getMessage());
+        }
+        updateMenu();
     }
     private static void updateTrailMedia() {
+        System.out.println("Enter ID of entity you wish to update: ");
+        Long id = input.nextLong(); input.nextLine();
 
+        TrailMedia media;
+        try {
+            var result = trailMediaDAO.displayById(id);
+            media = result.getData();
+            if (media == null) {
+                System.out.println("TrailMedia not found: " + id);
+                updateMenu();
+                return;
+            }
+            System.out.printf("%-5s %-10s %-10s %-10s %-30s %-20s%n", "ID", "Trail ID", "Stop ID", "Type", "URL", "Caption");
+            System.out.println("-".repeat(88));
+            System.out.printf("%-5d %-10d %-10s %-10s %-30s %-20s%n",
+                    media.getId(), media.getTrail_id(),
+                    media.getStop_id() != null ? media.getStop_id() : "-",
+                    media.getMedia_type(), media.getUrl(), media.getCaption());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.print("\nMedia Type (leave blank to keep): ");
+        String mediaTypeInput = input.nextLine();
+        String mediaType = mediaTypeInput.isBlank() ? media.getMedia_type() : mediaTypeInput;
+
+        System.out.print("\nURL (leave blank to keep): ");
+        String urlInput = input.nextLine();
+        String url = urlInput.isBlank() ? media.getUrl() : urlInput;
+
+        System.out.print("\nCaption (leave blank to keep): ");
+        String captionInput = input.nextLine();
+        String caption = captionInput.isBlank() ? media.getCaption() : captionInput;
+
+        System.out.print("\nStop ID (leave blank to keep): ");
+        String stopInput = input.nextLine();
+        Long stopId = stopInput.isBlank() ? media.getStop_id() : Long.parseLong(stopInput);
+
+        TrailMedia updated = new TrailMedia(id, media.getTrail_id(), stopId, mediaType, url, caption, media.getCreation_time());
+        try {
+            trailMediaDAO.update(updated);
+            System.out.println("\nTrailMedia updated successfully.");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update TrailMedia: " + e.getMessage());
+        }
+        updateMenu();
     }
     private static void updateRouteStop() {
+        System.out.println("Enter ID of entity you wish to update: ");
+        Long id = input.nextLong(); input.nextLine();
 
+        RouteStop stop;
+        try {
+            var result = routeStopDAO.displayById(id);
+            stop = result.getData();
+            if (stop == null) {
+                System.out.println("RouteStop not found: " + id);
+                updateMenu();
+                return;
+            }
+            System.out.printf("%-5s %-20s %-30s%n", "ID", "Route Name", "Location");
+            System.out.println("-".repeat(57));
+            System.out.printf("%-5d %-20s %-30s%n",
+                    stop.getId(), stop.getRoute_name(), stop.getLocation().getFullAddress());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.print("\nRoute Name (leave blank to keep): ");
+        String nameInput = input.nextLine();
+        String routeName = nameInput.isBlank() ? stop.getRoute_name() : nameInput;
+
+        System.out.print("\nLocation ID (leave blank to keep): ");
+        String locationInput = input.nextLine();
+        Location location = stop.getLocation();
+        if (!locationInput.isBlank()) {
+            try {
+                location = locationDAO.displayById(Long.parseLong(locationInput)).getData();
+                if (location == null) {
+                    System.out.println("Location not found, keeping existing.");
+                    location = stop.getLocation();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to find location: " + e.getMessage());
+            }
+        }
+
+        RouteStop updated = new RouteStop(id, routeName, location, stop.getCreated_at());
+        try {
+            routeStopDAO.update(updated);
+            System.out.println("\nRouteStop updated successfully.");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update RouteStop: " + e.getMessage());
+        }
+        updateMenu();
     }
 
 
