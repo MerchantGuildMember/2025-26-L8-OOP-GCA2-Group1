@@ -21,6 +21,8 @@ public class Main {
     static TrailDAO trailDAO            = new JdbcTrailDAO(URL, USER, PASS);
     static TrailMediaDAO trailMediaDAO  = new JdbcTrailMediaDAO(URL, USER, PASS);
 
+    static Scanner input                = new Scanner(System.in);
+
 
 
     public static void main(String[] args) throws Exception {
@@ -40,79 +42,17 @@ public class Main {
         clearScreen();
     }
 
-    static void displayMenu() {
-        System.out.println("_________Menu_________");
-        System.out.println("\t1. Go to CRUD");
-        System.out.println("\t2. Exit");
-        System.out.println("_______________________");
-        System.out.print("Input: ");
-        Scanner input = new Scanner(System.in);
-        int choice = input.nextInt();
-        while (choice != 1 && choice != 2) {
-            System.out.println("Try again");
-            choice = input.nextInt();
-        }
-        route(choice);
-    }
 
-    static void route(int choice) {
-        switch (choice) {
-            case 1:
-                displayCRUD();
-                break;
-            case 2:
-                System.exit(0);
-                break;
-            case 3:
-                createMenu();
-                break;
-            case 4:
-                readMenu();
-                break;
-            case 5:
-                updateMenu();
-                break;
-            case 6:
-//                deleteMenu();
-                break;
-            case 7:
-                addNewLocation();
-                break;
-            case 8:
-                addNewRouteStop();
-                break;
-            case 9:
-                addNewTrail();
-                break;
-            case 10:
-                addNewTrailMedia();
-                break;
-            case 11:
-                readLocation();
-                break;
-            case 12:
-                readRouteStop();
-                break;
-            case 13:
-                readTrail();
-                break;
-            case 14:
-                readTrailMedia();
-                break;
-            default:
-                System.out.println("Invalid choice");
-        }
-    }
-
-//              _____ _____  ______       _______ _____ ____  _   _
-//             / ____|  __ \|  ____|   /\|__   __|_   _/ __ \| \ | |
-//            | |    | |__) | |__     /  \  | |    | || |  | |  \| |
-//            | |    |  _  /|  __|   / /\ \ | |    | || |  | | . ` |
-//            | |____| | \ \| |____ / ____ \| |   _| || |__| | |\  |
-//             \_____|_|  \_\______/_/    \_\_|  |_____\____/|_| \_|
+//       _____ _____  ______       _______ ______
+//      / ____|  __ \|  ____|   /\|__   __|  ____|
+//     | |    | |__) | |__     /  \  | |  | |__
+//     | |    |  _  /|  __|   / /\ \ | |  |  __|
+//     | |____| | \ \| |____ / ____ \| |  | |____
+//      \_____|_|  \_\______/_/    \_\_|  |______|
+//
+//
 
     private static void addNewLocation() {
-        Scanner input = new Scanner(System.in);
         System.out.println("Entering New Location");
 
         System.out.print("\nLatitude: ");
@@ -137,7 +77,6 @@ public class Main {
     }
 
     private static void addNewRouteStop() {
-        Scanner input = new Scanner(System.in);
         System.out.println("Entering New RouteStop");
 
         System.out.print("\nRoute Name: ");
@@ -163,7 +102,6 @@ public class Main {
     }
 
     private static void addNewTrail() {
-        Scanner input = new Scanner(System.in);
         System.out.println("Entering New Trail");
 
         System.out.print("\nName: ");
@@ -211,7 +149,6 @@ public class Main {
     }
 
     private static void addNewTrailMedia() {
-        Scanner input = new Scanner(System.in);
         System.out.println("Entering New TrailMedia");
 
         System.out.print("\nTrail ID: ");
@@ -242,16 +179,17 @@ public class Main {
         createMenu();
     }
 
-//                _____  ______          _____
-//               |  __ \|  ____|   /\   |  __ \
-//               | |__) | |__     /  \  | |  | |
-//               |  _  /|  __|   / /\ \ | |  | |
-//               | | \ \| |____ / ____ \| |__| |
-//               |_|  \_\______/_/    \_\_____/
+//      _____  ______          _____
+//     |  __ \|  ____|   /\   |  __ \
+//     | |__) | |__     /  \  | |  | |
+//     |  _  /|  __|   / /\ \ | |  | |
+//     | | \ \| |____ / ____ \| |__| |
+//     |_|  \_\______/_/    \_\_____/
+//
+//
 
     private static void readLocation() {
         System.out.println("ID | ALL");
-        Scanner input = new Scanner(System.in);
         String choice = input.nextLine();
         if (choice.equals("ALL")) {
             ServerResponse<ArrayList<Location>> result = null;
@@ -297,7 +235,6 @@ public class Main {
 
     private static void readTrail() {
         System.out.println("ID | ALL");
-        Scanner input = new Scanner(System.in);
         String choice = input.nextLine();
         if (choice.equals("ALL")) {
             try {
@@ -342,7 +279,6 @@ public class Main {
 
     private static void readTrailMedia() {
         System.out.println("ID | ALL");
-        Scanner input = new Scanner(System.in);
         String choice = input.nextLine();
         if (choice.equals("ALL")) {
             try {
@@ -389,7 +325,6 @@ public class Main {
 
     private static void readRouteStop() {
         System.out.println("ID | ALL");
-        Scanner input = new Scanner(System.in);
         String choice = input.nextLine();
         if (choice.equals("ALL")) {
             try {
@@ -428,70 +363,186 @@ public class Main {
         readMenu();
     }
 
+//      _    _ _____  _____       _______ ______
+//     | |  | |  __ \|  __ \   /\|__   __|  ____|
+//     | |  | | |__) | |  | | /  \  | |  | |__
+//     | |  | |  ___/| |  | |/ /\ \ | |  |  __|
+//     | |__| | |    | |__| / ____ \| |  | |____
+//      \____/|_|    |_____/_/    \_\_|  |______|
+//
+//
+
+    private static void updateLocation() {
+        System.out.println("Enter ID of entity you wish to update: ");
+        Long id = input.nextLong(); input.nextLine();
+
+        Location location;
+        try {
+            var result = locationDAO.displayById(id);
+            location = result.getData();
+            if (location == null) {
+                System.out.println("Location not found: " + id);
+            } else {
+                System.out.printf("%-5s %-12s %-12s %-30s%n", "ID", "Latitude", "Longitude", "Full Address");
+                System.out.println("-".repeat(62));
+                System.out.printf("%-5d %-12s %-12s %-30s%n",
+                        location.getId(),
+                        location.getLatitude(),
+                        location.getLongitude(),
+                        location.getFullAddress());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        System.out.print("\nLatitude (leave blank to keep): ");
+        String latInput = input.nextLine();
+        Double latitude = latInput.isBlank() ? location.getLatitude().doubleValue() : Double.parseDouble(latInput);
+
+        System.out.print("\nLongitude (leave blank to keep): ");
+        String lonInput = input.nextLine();
+        Double longitude = lonInput.isBlank() ? location.getLongitude().doubleValue() : Double.parseDouble(lonInput);
+
+        System.out.print("\nFull Address (leave blank to keep): ");
+        String fullAddress = input.nextLine();
+        if (fullAddress.isBlank()) fullAddress = location.getFullAddress();
+
+        Location updated = new Location(id, latitude, longitude, fullAddress, location.getCreationTime());
+        try {
+            locationDAO.update(updated);
+            System.out.println("\nLocation updated successfully.");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update location");
+        }
+        updateMenu();
+
+
+
+    }
+    private static void updateTrail() {
+
+    }
+    private static void updateTrailMedia() {
+
+    }
+    private static void updateRouteStop() {
+
+    }
+
+
+//      _____  ______ _      ______ _______ ______
+//     |  __ \|  ____| |    |  ____|__   __|  ____|
+//     | |  | | |__  | |    | |__     | |  | |__
+//     | |  | |  __| | |    |  __|    | |  |  __|
+//     | |__| | |____| |____| |____   | |  | |____
+//     |_____/|______|______|______|  |_|  |______|
+//
+//
+
+    private static void deleteLocation() {}
+    private static void deleteTrail() {}
+    private static void deleteTrailMedia() {}
+    private static void deleteRouteStop() {}
+
+//      __  __ ______ _   _ _    _  _____
+//     |  \/  |  ____| \ | | |  | |/ ____|
+//     | \  / | |__  |  \| | |  | | (___
+//     | |\/| |  __| | . ` | |  | |\___ \
+//     | |  | | |____| |\  | |__| |____) |
+//     |_|  |_|______|_| \_|\____/|_____/
+//
+//
+
+    static void displayMenu() {
+        System.out.println("_________Menu_________");
+        System.out.println("\t1. Go to CRUD");
+        System.out.println("\t2. Exit");
+        System.out.println("_______________________");
+        System.out.print("Input: ");
+        int choice = input.nextInt();
+        while (choice != 1 && choice != 2) {
+            System.out.println("Try again");
+            choice = input.nextInt(); input.nextLine();
+        }
+        route(choice);
+    }
 
     static void createMenu() {
-        System.out.println("_______________________");
+        System.out.println("___________Crud___________");
         System.out.println("1. Add new Location");
         System.out.println("2. Add new RouteStop");
         System.out.println("3. Add new Trail");
         System.out.println("4. Add new TrailMedia");
         System.out.println("5. Return");
-        System.out.println("_______________________");
+        System.out.println("__________________________");
         System.out.print("Input: ");
-        Scanner input = new Scanner(System.in);
         int choice = input.nextInt();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
-            choice = input.nextInt();
+            choice = input.nextInt(); input.nextLine();
         }
 
         if(choice == 5) { displayCRUD(); return; }
         route(choice+6);
-        input.close();
 
     }
 
     static void readMenu() {
-        System.out.println("_______________________");
+        System.out.println("___________cRud___________");
         System.out.println("1. Read Location");
         System.out.println("2. Read RouteStop");
         System.out.println("3. Read Trail");
         System.out.println("4. Read TrailMedia");
         System.out.println("5. Return");
-        System.out.println("_______________________");
+        System.out.println("__________________________");
         System.out.print("Input: ");
-        Scanner input = new Scanner(System.in);
         int choice = input.nextInt();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
-            choice = input.nextInt();
+            choice = input.nextInt(); input.nextLine();
         }
 
         if(choice == 5) { displayCRUD(); return; }
         route(choice+10);
-        input.close();
     }
 
     static void updateMenu() {
-        System.out.println("_______________________");
+        System.out.println("___________crUd___________");
         System.out.println("1. Update Location");
         System.out.println("2. Update RouteStop");
         System.out.println("3. Update Trail");
         System.out.println("4. Update TrailMedia");
         System.out.println("5. Return");
-        System.out.println("_______________________");
+        System.out.println("__________________________");
         System.out.print("Input: ");
-        Scanner input = new Scanner(System.in);
+        int choice = input.nextInt();
+        while (choice > 5 || choice < 1) {
+            System.out.println("Try again");
+            choice = input.nextInt(); input.nextLine();
+        }
+        if(choice == 5) { displayCRUD(); return; }
+
+
+        route(choice+14);
+    }
+
+    static void deleteMenu() {
+        System.out.println("___________cruD___________");
+        System.out.println("1. Delete Location");
+        System.out.println("2. Delete RouteStop");
+        System.out.println("3. Delete Trail");
+        System.out.println("4. Delete TrailMedia");
+        System.out.println("5. Return");
+        System.out.println("__________________________");
+        System.out.print("Input: ");
         int choice = input.nextInt();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt();
         }
         if(choice == 5) { displayCRUD(); return; }
-        input.close();
 
 
-//        route(choice+6);
+        route(choice+14);
     }
 
 
@@ -504,22 +555,102 @@ public class Main {
         System.out.println("5. Return");
         System.out.println("_______________________");
         System.out.print("Input: ");
-        Scanner input = new Scanner(System.in);
         int choice = input.nextInt();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
-            choice = input.nextInt();
+            choice = input.nextInt(); input.nextLine();
         }
 
         if(choice == 5) { displayMenu(); return; }
         route(choice+2);
-        input.close();
 
     }
 
     static void clearScreen() {
         for(int i = 0; i < 5; i++) {
             System.out.println("\n");
+        }
+    }
+
+//      _____   ____  _    _ _______ ______ _____
+//     |  __ \ / __ \| |  | |__   __|  ____|  __ \
+//     | |__) | |  | | |  | |  | |  | |__  | |__) |
+//     |  _  /| |  | | |  | |  | |  |  __| |  _  /
+//     | | \ \| |__| | |__| |  | |  | |____| | \ \
+//     |_|  \_\\____/ \____/   |_|  |______|_|  \_\
+//
+//
+
+    static void route(int choice) {
+        switch (choice) {
+            case 1:
+                displayCRUD();
+                break;
+            case 2:
+                System.exit(0);
+                break;
+            case 3:
+                createMenu();
+                break;
+            case 4:
+                readMenu();
+                break;
+            case 5:
+                updateMenu();
+                break;
+            case 6:
+                deleteMenu();
+                break;
+            case 7:
+                addNewLocation();
+                break;
+            case 8:
+                addNewRouteStop();
+                break;
+            case 9:
+                addNewTrail();
+                break;
+            case 10:
+                addNewTrailMedia();
+                break;
+            case 11:
+                readLocation();
+                break;
+            case 12:
+                readRouteStop();
+                break;
+            case 13:
+                readTrail();
+                break;
+            case 14:
+                readTrailMedia();
+                break;
+            case 15:
+                updateLocation();
+                break;
+            case 16:
+                updateTrail();
+                break;
+            case 17:
+                updateTrailMedia();
+                break;
+            case 18:
+                updateRouteStop();
+                break;
+            case 19:
+                deleteLocation();
+                break;
+            case 20:
+                deleteTrail();
+                break;
+            case 21:
+                deleteTrailMedia();
+                break;
+            case 22:
+                deleteRouteStop();
+                break;
+            default:
+                System.out.println("Invalid choice");
         }
     }
 }
