@@ -21,10 +21,9 @@ public class Server {
 
     // === Fields ===
     private static final int    PORT    = 8080;
-    private static final String DB_URL  =
-            "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-    private static final String DB_USER = "oop_gca2";
-    private static final String DB_PASS = "one";
+    private static final String DB_URL  = System.getenv("URL");
+    private static final String DB_USER = System.getenv("USER");
+    private static final String DB_PASS = System.getenv("PASS");
 
     // === Public API ===
     // Creates: the server entry point — starts the accept loop
