@@ -74,7 +74,7 @@ public class DbSmokeTest {
             TrailDAO trailDAO =  new JdbcTrailDAO(url, user, pass);
             List<Trail> trails = trailDAO.findAll();
             for(Trail trail : trails){
-                System.out.println(trail.getId());
+                System.out.println(trail.getId());"
             }
 
         */

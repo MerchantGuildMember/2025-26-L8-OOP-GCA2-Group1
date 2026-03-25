@@ -12,7 +12,7 @@ Every response is a `ServerResponse<T>` JSON object sent by the server.
 {
   "fStatus":  "OK" | "ERROR",
   "fMessage": "human-readable message",
-  "fData":    <typed payload or null>
+  "fData":    <typed payload "or" null>
 }
 ```
 

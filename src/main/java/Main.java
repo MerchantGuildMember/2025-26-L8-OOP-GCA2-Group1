@@ -1,6 +1,4 @@
-import DAO.*;
 import client.ServerClient;
-import shared.ServerResponse;
 import tables.Location;
 import tables.RouteStop;
 import tables.Trail;
@@ -15,665 +13,402 @@ import java.util.Scanner;
  * Main method for interacting with the database in a visual manner.
  *
  * @author Aleksy Cieslak
- *
- *
  */
-
 public class Main {
-
-//    private static final String URL  = System.getenv("URL");
-//    private static final String USER = System.getenv("USER");
-//    private static final String PASS = System.getenv("PASS");
-
 
     static ServerClient server = new ServerClient("localhost", 8080);
     static Scanner input = new Scanner(System.in);
 
-
-
     public static void main(String[] args) throws Exception {
-
-//        welcomeMessage();
-
+        welcomeMessage();
         displayMenu();
-
-
     }
-    static void welcomeMessage() throws Exception {
+
+    // ─── Helpers ────────────────────────────────────────────────────────────────
+
+    static void clearScreen() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    static void welcomeMessage() throws InterruptedException {
         System.out.println("Welcome to Tour & Trail planning system!");
-        for(int i = 2; i > 0; i--) {
-            System.out.println("Moving on in "+i+" seconds...");
+        for (int i = 2; i > 0; i--) {
+            System.out.println("Moving on in " + i + " second(s)...");
             Thread.sleep(1000);
         }
         clearScreen();
     }
 
+    /**
+     * Read a trimmed line, consuming any leftover newline from a previous nextInt/nextDouble.
+     */
+    static String readLine() {
+        return input.nextLine().trim();
+    }
 
-//       _____ _____  ______       _______ ______
-//      / ____|  __ \|  ____|   /\|__   __|  ____|
-//     | |    | |__) | |__     /  \  | |  | |__
-//     | |    |  _  /|  __|   / /\ \ | |  |  __|
-//     | |____| | \ \| |____ / ____ \| |  | |____
-//      \_____|_|  \_\______/_/    \_\_|  |______|
-//
-//
+    static int readInt(int min, int max) {
+        int value;
+        while (true) {
+            try {
+                value = Integer.parseInt(readLine());
+                if (value >= min && value <= max) return value;
+            } catch (NumberFormatException ignored) {
+            }
+            System.out.print("Please enter a number between " + min + " and " + max + ": ");
+        }
+    }
+
+    static long readLong(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return Long.parseLong(readLine());
+            } catch (NumberFormatException ignored) {
+                System.out.println("Invalid number, try again.");
+            }
+        }
+    }
+
+    static double readDouble(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return Double.parseDouble(readLine());
+            } catch (NumberFormatException ignored) {
+                System.out.println("Invalid number, try again.");
+            }
+        }
+    }
+
+    static String send(String request) {
+        try {
+            return server.send(request);
+        } catch (IOException e) {
+            System.out.println("Server error: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // ─── CREATE ─────────────────────────────────────────────────────────────────
 
     private static void addNewLocation() {
-        System.out.println("Entering New Location");
+        System.out.println("\n── Add New Location ──");
+        double lat = readDouble("Latitude:  ");
+        double lon = readDouble("Longitude: ");
+        System.out.print("Full Address: ");
+        String addr = readLine();
 
-        System.out.print("\nLatitude: ");
-        Double latitude = input.nextDouble(); input.nextLine();
-
-        System.out.print("\nLongitude: ");
-        Double longitude = input.nextDouble(); input.nextLine();
-
-        System.out.print("\nFull Address: ");
-        String fullAddress = input.nextLine();
-
-        LocalDateTime time = LocalDateTime.now();
-        System.out.println("\nInserting Location: "+latitude+ ", "+longitude+", \""+fullAddress+"\", "+time);
-
-        Location newLocation = new Location(null, latitude, longitude, fullAddress, time);
-        try {
-            server.send(server.buildActionWithData("ADD_LOCATION", newLocation));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to insert location");
-        }
+        Location loc = new Location(null, lat, lon, addr, LocalDateTime.now());
+        String response = send(server.buildActionWithData("ADD_LOCATION", loc));
+        System.out.println("Server: " + response);
         createMenu();
     }
+
     private static void addNewRouteStop() {
-        System.out.println("Entering New RouteStop");
+        System.out.println("\n── Add New RouteStop ──");
+        System.out.print("Route Name: ");
+        String routeName = readLine();
+        long locationId = readLong("Location ID: ");
 
-        System.out.print("\nRoute Name: ");
-        String routeName = input.nextLine();
-
-        System.out.print("\nLocation ID: ");
-        Long locationId = input.nextLong(); input.nextLine();
-
-        LocalDateTime time = LocalDateTime.now();
-
-        try {
-            String locResponse = server.send(server.buildActionWithId("GET_LOCATION_BY_ID", locationId));
-            System.out.println("\nServer response: " + locResponse);
-
-            RouteStop newRouteStop = new RouteStop(0L, routeName, new Location(locationId, 0, 0, time), time);
-            String response = server.send(server.buildActionWithData("ADD_ROUTESTOP", newRouteStop));
-            System.out.println("\nInserted RouteStop: " + response);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to insert RouteStop: " + e.getMessage());
-        }
-        createMenu();
-    }
-    private static void addNewTrail() {
-        System.out.println("Entering New Trail");
-
-        System.out.print("\nName: ");
-        String name = input.nextLine();
-
-        System.out.print("\nDescription: ");
-        String description = input.nextLine();
-
-        System.out.print("\nDifficulty: ");
-        String difficulty = input.nextLine();
-
-        System.out.print("\nEstimated Time (hours): ");
-        Double estimatedTime = input.nextDouble(); input.nextLine();
-
-        System.out.print("\nHow many stops? ");
-        int stopCount = input.nextInt(); input.nextLine();
-
-        ArrayList<RouteStop> stops = new ArrayList<>();
-        for (int i = 0; i < stopCount; i++) {
-            System.out.print("Stop " + (i + 1) + " ID: ");
-            Long stopId = input.nextLong(); input.nextLine();
-            stops.add(new RouteStop(stopId, new Location(stopId, 0, 0, LocalDateTime.now()), LocalDateTime.now()));
-        }
-
-        if (stops.isEmpty()) {
-            System.out.println("No valid stops found, trail not created.");
+        String locCheck = send(server.buildActionWithId("GET_LOCATION_BY_ID", locationId));
+        if (locCheck == null) {
+            System.out.println("Location not found.");
             createMenu();
             return;
         }
+        System.out.println("Found location: " + locCheck);
 
-        try {
-            Trail newTrail = new Trail(0L, name, description, difficulty, estimatedTime, stops);
-            String response = server.send(server.buildActionWithData("ADD_TRAIL", newTrail));
-            System.out.println("\nServer response: " + response);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to insert Trail: " + e.getMessage());
-        }
+        RouteStop rs = new RouteStop(0L, routeName, new Location(locationId, 0, 0, LocalDateTime.now()), LocalDateTime.now());
+        String response = send(server.buildActionWithData("ADD_ROUTESTOP", rs));
+        System.out.println("Server: " + response);
         createMenu();
     }
+
+    private static void addNewTrail() {
+        System.out.println("\n── Add New Trail ──");
+        System.out.print("Name: ");
+        String name = readLine();
+        System.out.print("Description: ");
+        String description = readLine();
+        System.out.print("Difficulty: ");
+        String difficulty = readLine();
+        double estimatedTime = readDouble("Estimated Time (hours): ");
+
+        System.out.print("How many stops? ");
+        int stopCount = readInt(0, 100);
+
+        ArrayList<RouteStop> stops = new ArrayList<>();
+        for (int i = 0; i < stopCount; i++) {
+            long stopId = readLong("  Stop " + (i + 1) + " ID: ");
+            stops.add(new RouteStop(stopId, new Location(stopId, 0, 0, LocalDateTime.now()), LocalDateTime.now()));
+        }
+
+        Trail trail = new Trail(0L, name, description, difficulty, estimatedTime, stops);
+        String response = send(server.buildActionWithData("ADD_TRAIL", trail));
+        System.out.println("Server: " + response);
+        createMenu();
+    }
+
     private static void addNewTrailMedia() {
-        System.out.println("Entering New TrailMedia");
+        System.out.println("\n── Add New TrailMedia ──");
+        long trailId = readLong("Trail ID: ");
 
-        System.out.print("\nTrail ID: ");
-        Long trailId = input.nextLong(); input.nextLine();
+        System.out.print("Stop ID (blank = none): ");
+        String stopRaw = readLine();
+        Long stopId = stopRaw.isEmpty() ? null : Long.parseLong(stopRaw);
 
-        System.out.print("\nStop ID (leave blank if none): ");
-        String stopInput = input.nextLine();
-        Long stopId = stopInput.isBlank() ? null : Long.parseLong(stopInput);
+        System.out.print("Media Type (image/video): ");
+        String mediaType = readLine();
+        System.out.print("URL: ");
+        String url = readLine();
+        System.out.print("Caption: ");
+        String caption = readLine();
 
-        System.out.print("\nMedia Type (image/video): ");
-        String mediaType = input.nextLine();
-
-        System.out.print("\nURL: ");
-        String url = input.nextLine();
-
-        System.out.print("\nCaption: ");
-        String caption = input.nextLine();
-
-        LocalDateTime time = LocalDateTime.now();
-        System.out.println("\nInserting TrailMedia: " + mediaType + ", \"" + url + "\", " + time);
-
-        TrailMedia newTrailMedia = new TrailMedia(0L, trailId, stopId, mediaType, url, caption, time);
-        try {
-            String response = server.send(server.buildActionWithData("ADD_TRAILMEDIA", newTrailMedia));
-            System.out.println("\nServer response: " + response);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to insert TrailMedia: " + e.getMessage());
-        }
+        TrailMedia tm = new TrailMedia(0L, trailId, stopId, mediaType, url, caption, LocalDateTime.now());
+        String response = send(server.buildActionWithData("ADD_TRAILMEDIA", tm));
+        System.out.println("Server: " + response);
         createMenu();
     }
 
-//      _____  ______          _____
-//     |  __ \|  ____|   /\   |  __ \
-//     | |__) | |__     /  \  | |  | |
-//     |  _  /|  __|   / /\ \ | |  | |
-//     | | \ \| |____ / ____ \| |__| |
-//     |_|  \_\______/_/    \_\_____/
-//
-//
+    // ─── READ ────────────────────────────────────────────────────────────────────
+
+    private static void readEntity(String allAction, String byIdAction, String label) {
+        System.out.println("\n── Read " + label + " ──");
+        System.out.print("ALL or ID: ");
+        String choice = readLine().toUpperCase();
+        String response;
+        if (choice.equals("ALL")) {
+            response = send(server.buildAction(allAction));
+        } else if (choice.equals("ID")) {
+            long id = readLong("Input ID: ");
+            response = send(server.buildActionWithId(byIdAction, id));
+        } else {
+            System.out.println("Invalid choice.");
+            readMenu();
+            return;
+        }
+        System.out.println(response);
+        readMenu();
+    }
 
     private static void readLocation() {
-        System.out.println("ID | ALL");
-        String choice = input.nextLine();
-        try {
-            if (choice.equals("ALL")) {
-                String response = server.send(server.buildAction("GET_ALL_LOCATIONS"));
-                System.out.println(response);
-            } else if (choice.equals("ID")) {
-                System.out.print("Input ID: ");
-                Long id = input.nextLong(); input.nextLine();
-                String response = server.send(server.buildActionWithId("GET_LOCATION_BY_ID", id));
-                System.out.println(response);
-            } else {
-                System.out.println("Invalid choice");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        readMenu();
-    }
-    private static void readTrail() {
-        System.out.println("ID | ALL");
-        String choice = input.nextLine();
-        try {
-            if (choice.equals("ALL")) {
-                String response = server.send(server.buildAction("GET_ALL_TRAILS"));
-                System.out.println(response);
-            } else if (choice.equals("ID")) {
-                System.out.print("Input ID: ");
-                Long id = input.nextLong(); input.nextLine();
-                String response = server.send(server.buildActionWithId("GET_TRAIL_BY_ID", id));
-                System.out.println(response);
-            } else {
-                System.out.println("Invalid choice");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        readMenu();
-    }
-    private static void readTrailMedia() {
-        System.out.println("ID | ALL");
-        String choice = input.nextLine();
-        try {
-            if (choice.equals("ALL")) {
-                String response = server.send(server.buildAction("GET_ALL_TRAILMEDIA"));
-                System.out.println(response);
-            } else if (choice.equals("ID")) {
-                System.out.print("Input ID: ");
-                Long id = input.nextLong(); input.nextLine();
-                String response = server.send(server.buildActionWithId("GET_TRAILMEDIA_BY_ID", id));
-                System.out.println(response);
-            } else {
-                System.out.println("Invalid choice");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        readMenu();
-    }
-    private static void readRouteStop() {
-        System.out.println("ID | ALL");
-        String choice = input.nextLine();
-        try {
-            if (choice.equals("ALL")) {
-                String response = server.send(server.buildAction("GET_ALL_ROUTESTOPS"));
-                System.out.println(response);
-            } else if (choice.equals("ID")) {
-                System.out.print("Input ID: ");
-                Long id = input.nextLong(); input.nextLine();
-                String response = server.send(server.buildActionWithId("GET_ROUTESTOP_BY_ID", id));
-                System.out.println(response);
-            } else {
-                System.out.println("Invalid choice");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        readMenu();
+        readEntity("GET_ALL_LOCATIONS", "GET_LOCATION_BY_ID", "Location");
     }
 
-//      _    _ _____  _____       _______ ______
-//     | |  | |  __ \|  __ \   /\|__   __|  ____|
-//     | |  | | |__) | |  | | /  \  | |  | |__
-//     | |  | |  ___/| |  | |/ /\ \ | |  |  __|
-//     | |__| | |    | |__| / ____ \| |  | |____
-//      \____/|_|    |_____/_/    \_\_|  |______|
-//
-//
+    private static void readRouteStop() {
+        readEntity("GET_ALL_ROUTESTOPS", "GET_ROUTESTOP_BY_ID", "RouteStop");
+    }
+
+    private static void readTrail() {
+        readEntity("GET_ALL_TRAILS", "GET_TRAIL_BY_ID", "Trail");
+    }
+
+    private static void readTrailMedia() {
+        readEntity("GET_ALL_TRAILMEDIA", "GET_TRAILMEDIA_BY_ID", "TrailMedia");
+    }
+
+    // ─── UPDATE ──────────────────────────────────────────────────────────────────
 
     private static void updateLocation() {
-        System.out.println("Enter ID of entity you wish to update: ");
-        Long id = input.nextLong(); input.nextLine();
+        System.out.println("\n── Update Location ──");
+        long id = readLong("ID to update: ");
+        System.out.println("Current: " + send(server.buildActionWithId("GET_LOCATION_BY_ID", id)));
 
-        try {
-            String current = server.send(server.buildActionWithId("GET_LOCATION_BY_ID", id));
-            System.out.println("Current: " + current);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        double lat = readDouble("New Latitude:  ");
+        double lon = readDouble("New Longitude: ");
+        System.out.print("New Full Address: ");
+        String addr = readLine();
 
-        System.out.print("\nLatitude: ");
-        Double latitude = input.nextDouble(); input.nextLine();
-        System.out.print("\nLongitude: ");
-        Double longitude = input.nextDouble(); input.nextLine();
-        System.out.print("\nFull Address: ");
-        String fullAddress = input.nextLine();
-
-        Location updated = new Location(id, latitude, longitude, fullAddress, LocalDateTime.now());
-        try {
-            String response = server.send(server.buildActionWithData("UPDATE_LOCATION", updated));
-            System.out.println("\nServer response: " + response);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to update location: " + e.getMessage());
-        }
+        Location loc = new Location(id, lat, lon, addr, LocalDateTime.now());
+        System.out.println("Server: " + send(server.buildActionWithData("UPDATE_LOCATION", loc)));
         updateMenu();
     }
-    private static void updateTrail() {
-        System.out.println("Enter ID of entity you wish to update: ");
-        Long id = input.nextLong(); input.nextLine();
 
-        try {
-            String current = server.send(server.buildActionWithId("GET_TRAIL_BY_ID", id));
-            System.out.println("Current: " + current);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.print("\nName: ");
-        String name = input.nextLine();
-        System.out.print("\nDescription: ");
-        String description = input.nextLine();
-        System.out.print("\nDifficulty: ");
-        String difficulty = input.nextLine();
-        System.out.print("\nEstimated Time (hours): ");
-        Double estimatedTime = input.nextDouble(); input.nextLine();
-
-        Trail updated = new Trail(id, name, description, difficulty, estimatedTime, new ArrayList<>());
-        try {
-            String response = server.send(server.buildActionWithData("UPDATE_TRAIL", updated));
-            System.out.println("\nServer response: " + response);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to update trail: " + e.getMessage());
-        }
-        updateMenu();
-    }
-    private static void updateTrailMedia() {
-        System.out.println("Enter ID of entity you wish to update: ");
-        Long id = input.nextLong(); input.nextLine();
-
-        try {
-            String current = server.send(server.buildActionWithId("GET_TRAILMEDIA_BY_ID", id));
-            System.out.println("Current: " + current);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.print("\nMedia Type: ");
-        String mediaType = input.nextLine();
-        System.out.print("\nURL: ");
-        String url = input.nextLine();
-        System.out.print("\nCaption: ");
-        String caption = input.nextLine();
-        System.out.print("\nTrail ID: ");
-        Long trailId = input.nextLong(); input.nextLine();
-        System.out.print("\nStop ID (leave blank if none): ");
-        String stopInput = input.nextLine();
-        Long stopId = stopInput.isBlank() ? null : Long.parseLong(stopInput);
-
-        TrailMedia updated = new TrailMedia(id, trailId, stopId, mediaType, url, caption, LocalDateTime.now());
-        try {
-            String response = server.send(server.buildActionWithData("UPDATE_TRAILMEDIA", updated));
-            System.out.println("\nServer response: " + response);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to update TrailMedia: " + e.getMessage());
-        }
-        updateMenu();
-    }
     private static void updateRouteStop() {
-        System.out.println("Enter ID of entity you wish to update: ");
-        Long id = input.nextLong(); input.nextLine();
+        System.out.println("\n── Update RouteStop ──");
+        long id = readLong("ID to update: ");
+        System.out.println("Current: " + send(server.buildActionWithId("GET_ROUTESTOP_BY_ID", id)));
 
-        try {
-            String current = server.send(server.buildActionWithId("GET_ROUTESTOP_BY_ID", id));
-            System.out.println("Current: " + current);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        System.out.print("New Route Name: ");
+        String routeName = readLine();
+        long locationId = readLong("New Location ID: ");
 
-        System.out.print("\nRoute Name: ");
-        String routeName = input.nextLine();
-        System.out.print("\nLocation ID: ");
-        Long locationId = input.nextLong(); input.nextLine();
-
-        RouteStop updated = new RouteStop(id, routeName, new Location(locationId, 0, 0, LocalDateTime.now()), LocalDateTime.now());
-        try {
-            String response = server.send(server.buildActionWithData("UPDATE_ROUTESTOP", updated));
-            System.out.println("\nServer response: " + response);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to update RouteStop: " + e.getMessage());
-        }
+        RouteStop rs = new RouteStop(id, routeName, new Location(locationId, 0, 0, LocalDateTime.now()), LocalDateTime.now());
+        System.out.println("Server: " + send(server.buildActionWithData("UPDATE_ROUTESTOP", rs)));
         updateMenu();
     }
 
+    private static void updateTrail() {
+        System.out.println("\n── Update Trail ──");
+        long id = readLong("ID to update: ");
+        System.out.println("Current: " + send(server.buildActionWithId("GET_TRAIL_BY_ID", id)));
 
-//      _____  ______ _      ______ _______ ______
-//     |  __ \|  ____| |    |  ____|__   __|  ____|
-//     | |  | | |__  | |    | |__     | |  | |__
-//     | |  | |  __| | |    |  __|    | |  |  __|
-//     | |__| | |____| |____| |____   | |  | |____
-//     |_____/|______|______|______|  |_|  |______|
-//
-//
+        System.out.print("New Name: ");
+        String name = readLine();
+        System.out.print("New Description: ");
+        String description = readLine();
+        System.out.print("New Difficulty: ");
+        String difficulty = readLine();
+        double estimatedTime = readDouble("New Estimated Time (hours): ");
+
+        Trail trail = new Trail(id, name, description, difficulty, estimatedTime, new ArrayList<>());
+        System.out.println("Server: " + send(server.buildActionWithData("UPDATE_TRAIL", trail)));
+        updateMenu();
+    }
+
+    private static void updateTrailMedia() {
+        System.out.println("\n── Update TrailMedia ──");
+        long id = readLong("ID to update: ");
+        System.out.println("Current: " + send(server.buildActionWithId("GET_TRAILMEDIA_BY_ID", id)));
+
+        System.out.print("New Media Type: ");
+        String mediaType = readLine();
+        System.out.print("New URL: ");
+        String url = readLine();
+        System.out.print("New Caption: ");
+        String caption = readLine();
+        long trailId = readLong("New Trail ID: ");
+        System.out.print("New Stop ID (blank = none): ");
+        String stopRaw = readLine();
+        Long stopId = stopRaw.isEmpty() ? null : Long.parseLong(stopRaw);
+
+        TrailMedia tm = new TrailMedia(id, trailId, stopId, mediaType, url, caption, LocalDateTime.now());
+        System.out.println("Server: " + send(server.buildActionWithData("UPDATE_TRAILMEDIA", tm)));
+        updateMenu();
+    }
+
+    // ─── DELETE ──────────────────────────────────────────────────────────────────
+
+    private static void deleteEntity(String action, String label, Runnable returnMenu) {
+        System.out.println("\n── Delete " + label + " ──");
+        long id = readLong("ID to delete: ");
+        System.out.print("Are you sure? (y/n): ");
+        if (readLine().equalsIgnoreCase("y")) {
+            System.out.println("Server: " + send(server.buildActionWithId(action, id)));
+        } else {
+            System.out.println("Cancelled.");
+        }
+        returnMenu.run();
+    }
 
     private static void deleteLocation() {
-        System.out.println("Enter ID of location to delete: ");
-        Long id = input.nextLong(); input.nextLine();
-        System.out.print("Are you sure? (y/n): ");
-        String confirm = input.nextLine();
-        if (confirm.equalsIgnoreCase("y")) {
-            try {
-                String response = server.send(server.buildActionWithId("DELETE_LOCATION", id));
-                System.out.println("Server response: " + response);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to delete location: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Cancelled.");
-        }
-        deleteMenu();
-    }
-    private static void deleteRouteStop() {
-        System.out.println("Enter ID of RouteStop to delete: ");
-        Long id = input.nextLong(); input.nextLine();
-        System.out.print("Are you sure? (y/n): ");
-        String confirm = input.nextLine();
-        if (confirm.equalsIgnoreCase("y")) {
-            try {
-                String response = server.send(server.buildActionWithId("DELETE_ROUTESTOP", id));
-                System.out.println("Server response: " + response);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to delete RouteStop: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Cancelled.");
-        }
-        deleteMenu();
-    }
-    private static void deleteTrail() {
-        System.out.println("Enter ID of trail to delete: ");
-        Long id = input.nextLong(); input.nextLine();
-        System.out.print("Are you sure? (y/n): ");
-        String confirm = input.nextLine();
-        if (confirm.equalsIgnoreCase("y")) {
-            try {
-                String response = server.send(server.buildActionWithId("DELETE_TRAIL", id));
-                System.out.println("Server response: " + response);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to delete trail: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Cancelled.");
-        }
-        deleteMenu();
-    }
-    private static void deleteTrailMedia() {
-        System.out.println("Enter ID of TrailMedia to delete: ");
-        Long id = input.nextLong(); input.nextLine();
-        System.out.print("Are you sure? (y/n): ");
-        String confirm = input.nextLine();
-        if (confirm.equalsIgnoreCase("y")) {
-            try {
-                String response = server.send(server.buildActionWithId("DELETE_TRAILMEDIA", id));
-                System.out.println("Server response: " + response);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to delete TrailMedia: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Cancelled.");
-        }
-        deleteMenu();
+        deleteEntity("DELETE_LOCATION", "Location", Main::deleteMenu);
     }
 
-//      __  __ ______ _   _ _    _  _____
-//     |  \/  |  ____| \ | | |  | |/ ____|
-//     | \  / | |__  |  \| | |  | | (___
-//     | |\/| |  __| | . ` | |  | |\___ \
-//     | |  | | |____| |\  | |__| |____) |
-//     |_|  |_|______|_| \_|\____/|_____/
-//
-//
+    private static void deleteRouteStop() {
+        deleteEntity("DELETE_ROUTESTOP", "RouteStop", Main::deleteMenu);
+    }
+
+    private static void deleteTrail() {
+        deleteEntity("DELETE_TRAIL", "Trail", Main::deleteMenu);
+    }
+
+    private static void deleteTrailMedia() {
+        deleteEntity("DELETE_TRAILMEDIA", "TrailMedia", Main::deleteMenu);
+    }
+
+    // ─── MENUS ───────────────────────────────────────────────────────────────────
 
     static void displayMenu() {
-        System.out.println("_________Menu_________");
-        System.out.println("\t1. Go to CRUD");
-        System.out.println("\t2. Exit");
+        System.out.println("\n_________Menu_________");
+        System.out.println("  1. Go to CRUD");
+        System.out.println("  2. Exit");
+        System.out.println("______________________");
+        System.out.print("Input: ");
+        int choice = readInt(1, 2);
+        if (choice == 1) displayCRUD();
+        else System.exit(0);
+    }
+
+    static void displayCRUD() {
+        System.out.println("\n_______________________");
+        System.out.println("  1. Create");
+        System.out.println("  2. Read");
+        System.out.println("  3. Update");
+        System.out.println("  4. Delete");
+        System.out.println("  5. Return");
         System.out.println("_______________________");
         System.out.print("Input: ");
-        int choice = input.nextInt(); input.nextLine();
-        while (choice != 1 && choice != 2) {
-            System.out.println("Try again");
-            choice = input.nextInt(); input.nextLine();
+        int choice = readInt(1, 5);
+        switch (choice) {
+            case 1 -> createMenu();
+            case 2 -> readMenu();
+            case 3 -> updateMenu();
+            case 4 -> deleteMenu();
+            case 5 -> displayMenu();
         }
-        route(choice);
     }
+
     static void createMenu() {
-        System.out.println("___________Crud___________");
-        System.out.println("1. Add new Location");
-        System.out.println("2. Add new RouteStop");
-        System.out.println("3. Add new Trail");
-        System.out.println("4. Add new TrailMedia");
-        System.out.println("5. Return");
-        System.out.println("__________________________");
+        System.out.println("\n___________Create___________");
+        System.out.println("  1. Add new Location");
+        System.out.println("  2. Add new RouteStop");
+        System.out.println("  3. Add new Trail");
+        System.out.println("  4. Add new TrailMedia");
+        System.out.println("  5. Return");
+        System.out.println("____________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt(); input.nextLine();
-        while (choice > 5 || choice < 1) {
-            System.out.println("Try again");
-            choice = input.nextInt(); input.nextLine();
+        switch (readInt(1, 5)) {
+            case 1 -> addNewLocation();
+            case 2 -> addNewRouteStop();
+            case 3 -> addNewTrail();
+            case 4 -> addNewTrailMedia();
+            case 5 -> displayCRUD();
         }
-
-        if(choice == 5) { displayCRUD(); return; }
-        route(choice+6);
-
     }
+
     static void readMenu() {
-        System.out.println("___________cRud___________");
-        System.out.println("1. Read Location");
-        System.out.println("2. Read RouteStop");
-        System.out.println("3. Read Trail");
-        System.out.println("4. Read TrailMedia");
-        System.out.println("5. Return");
+        System.out.println("\n___________Read___________");
+        System.out.println("  1. Read Location");
+        System.out.println("  2. Read RouteStop");
+        System.out.println("  3. Read Trail");
+        System.out.println("  4. Read TrailMedia");
+        System.out.println("  5. Return");
         System.out.println("__________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt(); input.nextLine();
-        while (choice > 5 || choice < 1) {
-            System.out.println("Try again");
-            choice = input.nextInt(); input.nextLine();
+        switch (readInt(1, 5)) {
+            case 1 -> readLocation();
+            case 2 -> readRouteStop();
+            case 3 -> readTrail();
+            case 4 -> readTrailMedia();
+            case 5 -> displayCRUD();
         }
-
-        if(choice == 5) { displayCRUD(); return; }
-        route(choice+10);
     }
+
     static void updateMenu() {
-        System.out.println("___________crUd___________");
-        System.out.println("1. Update Location");
-        System.out.println("2. Update RouteStop");
-        System.out.println("3. Update Trail");
-        System.out.println("4. Update TrailMedia");
-        System.out.println("5. Return");
-        System.out.println("__________________________");
+        System.out.println("\n___________Update___________");
+        System.out.println("  1. Update Location");
+        System.out.println("  2. Update RouteStop");
+        System.out.println("  3. Update Trail");
+        System.out.println("  4. Update TrailMedia");
+        System.out.println("  5. Return");
+        System.out.println("____________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt(); input.nextLine();
-        while (choice > 5 || choice < 1) {
-            System.out.println("Try again");
-            choice = input.nextInt(); input.nextLine();
+        switch (readInt(1, 5)) {
+            case 1 -> updateLocation();
+            case 2 -> updateRouteStop();
+            case 3 -> updateTrail();
+            case 4 -> updateTrailMedia();
+            case 5 -> displayCRUD();
         }
-        if(choice == 5) { displayCRUD(); return; }
-
-
-        route(choice+14);
     }
 
     static void deleteMenu() {
-        System.out.println("___________cruD___________");
-        System.out.println("1. Delete Location");
-        System.out.println("2. Delete RouteStop");
-        System.out.println("3. Delete Trail");
-        System.out.println("4. Delete TrailMedia");
-        System.out.println("5. Return");
-        System.out.println("__________________________");
+        System.out.println("\n___________Delete___________");
+        System.out.println("  1. Delete Location");
+        System.out.println("  2. Delete RouteStop");
+        System.out.println("  3. Delete Trail");
+        System.out.println("  4. Delete TrailMedia");
+        System.out.println("  5. Return");
+        System.out.println("____________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt(); input.nextLine();
-        while (choice > 5 || choice < 1) {
-            System.out.println("Try again");
-            choice = input.nextInt(); input.nextLine();
-        }
-        if(choice == 5) { displayCRUD(); return; }
-
-
-        route(choice+18);
-    }
-
-
-    static void displayCRUD() {
-        System.out.println("_______________________");
-        System.out.println("1. Create");
-        System.out.println("2. Read");
-        System.out.println("3. Update");
-        System.out.println("4. Delete");
-        System.out.println("5. Return");
-        System.out.println("_______________________");
-        System.out.print("Input: ");
-        int choice = input.nextInt(); input.nextLine();
-        while (choice > 5 || choice < 1) {
-            System.out.println("Try again");
-            choice = input.nextInt(); input.nextLine();
-        }
-
-        if(choice == 5) { displayMenu(); return; }
-        route(choice+2);
-
-    }
-
-    static void clearScreen() {
-        for(int i = 0; i < 5; i++) {
-            System.out.println("\n");
-        }
-    }
-
-//      _____   ____  _    _ _______ ______ _____
-//     |  __ \ / __ \| |  | |__   __|  ____|  __ \
-//     | |__) | |  | | |  | |  | |  | |__  | |__) |
-//     |  _  /| |  | | |  | |  | |  |  __| |  _  /
-//     | | \ \| |__| | |__| |  | |  | |____| | \ \
-//     |_|  \_\\____/ \____/   |_|  |______|_|  \_\
-//
-//
-
-    static void route(int choice) {
-        switch (choice) {
-            case 1:
-                displayCRUD();
-                break;
-            case 2:
-                System.exit(0);
-                break;
-            case 3:
-                createMenu();
-                break;
-            case 4:
-                readMenu();
-                break;
-            case 5:
-                updateMenu();
-                break;
-            case 6:
-                deleteMenu();
-                break;
-            case 7:
-                addNewLocation();
-                break;
-            case 8:
-                addNewRouteStop();
-                break;
-            case 9:
-                addNewTrail();
-                break;
-            case 10:
-                addNewTrailMedia();
-                break;
-            case 11:
-                readLocation();
-                break;
-            case 12:
-                readRouteStop();
-                break;
-            case 13:
-                readTrail();
-                break;
-            case 14:
-                readTrailMedia();
-                break;
-            case 15:
-                updateLocation();
-                break;
-            case 16:
-                updateTrail();
-                break;
-            case 17:
-                updateTrailMedia();
-                break;
-            case 18:
-                updateRouteStop();
-                break;
-            case 19:
-                deleteLocation();
-                break;
-            case 20:
-                deleteTrail();
-                break;
-            case 21:
-                deleteTrailMedia();
-                break;
-            case 22:
-                deleteRouteStop();
-                break;
-            default:
-                System.out.println("Invalid choice");
+        switch (readInt(1, 5)) {
+            case 1 -> deleteLocation();
+            case 2 -> deleteRouteStop();
+            case 3 -> deleteTrail();
+            case 4 -> deleteTrailMedia();
+            case 5 -> displayCRUD();
         }
     }
 }
-

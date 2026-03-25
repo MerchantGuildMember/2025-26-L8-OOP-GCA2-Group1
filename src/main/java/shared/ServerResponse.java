@@ -9,7 +9,7 @@ package shared;
  * this class serialised to JSON — raw strings and raw types are not permitted.</p>
  *
  * @param <T> the type of the data payload
- * @author Maryna Hordiienko (primary)
+ * @author Aleksy Cieslak
  */
 public class ServerResponse<T> {
 
@@ -23,9 +23,9 @@ public class ServerResponse<T> {
     public ServerResponse(String status, String message, T data) {
         if (status == null || status.isBlank())
             throw new IllegalArgumentException("status is required");
-        fStatus  = status;
+        fStatus = status;
         fMessage = (message == null) ? "" : message;
-        fData    = data;
+        fData = data;
     }
 
     // === Public API ===
@@ -77,7 +77,7 @@ public class ServerResponse<T> {
         if (this == o) return true;
         if (!(o instanceof ServerResponse)) return false;
         ServerResponse<?> other = (ServerResponse<?>) o;
-        return java.util.Objects.equals(fStatus,   other.fStatus)
+        return java.util.Objects.equals(fStatus, other.fStatus)
                 && java.util.Objects.equals(fMessage, other.fMessage);
     }
 }

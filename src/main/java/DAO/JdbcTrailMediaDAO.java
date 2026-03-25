@@ -33,7 +33,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
 
 
     @Override
-    public ServerResponse <ArrayList<TrailMedia>> displayAll() throws Exception {
+    public ServerResponse<ArrayList<TrailMedia>> displayAll() throws Exception {
         String sql = "SELECT id, trail_id, stop_id, media_type, url, caption, creation_time FROM trail_media ORDER BY id";
         ArrayList<TrailMedia> list = new ArrayList<>();
         try (Connection c = open();
@@ -47,7 +47,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
     }
 
     @Override
-    public ServerResponse<TrailMedia>displayById(Long id) throws Exception {
+    public ServerResponse<TrailMedia> displayById(Long id) throws Exception {
         if (id == null || id <= 0)
             return new ServerResponse<>("Error", "ID Error" + id, null);
         String sql = "SELECT id, trail_id, stop_id, media_type, url, caption, creation_time FROM trail_media WHERE id = ?";
@@ -145,6 +145,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
         LocalDateTime creation_time = rs.getTimestamp("creation_time").toLocalDateTime();
         return new TrailMedia(id, trail_id, stop_id, media_type, url, caption, creation_time);
     }
+
     @Override
     public TrailMedia entFromJson(String json) {
         return JsonUtil.fromJson(json, TrailMedia.class);

@@ -31,28 +31,28 @@ import java.util.Scanner;
  * All communication with the server uses JSON over a TCP socket.
  * All server replies are parsed as {@link ServerResponse} objects.</p>
  *
- * @author Maryna Hordiienko (primary)
+ * @author Maryna Hordiienko
  */
 public class Client {
 
     // === Fields ===
     private static final String HOST = "localhost";
-    private static final int    PORT = 8080;
+    private static final int PORT = 8080;
 
-    private final PrintWriter    fOut;
+    private final PrintWriter fOut;
     private final BufferedReader fIn;
-    private final Scanner        fScanner;
-    private final Gson           fGson;
+    private final Scanner fScanner;
+    private final Gson fGson;
 
     // === Constructors ===
     // Creates: a Client wired to the given socket streams
     public Client(PrintWriter out, BufferedReader in) {
-        fOut     = out;
-        fIn      = in;
+        fOut = out;
+        fIn = in;
         fScanner = new Scanner(System.in);
-        fGson    = new GsonBuilder()
+        fGson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class,
-                        (JsonSerializer<LocalDateTime>)   (src, t, ctx) -> new JsonPrimitive(src.toString()))
+                        (JsonSerializer<LocalDateTime>) (src, t, ctx) -> new JsonPrimitive(src.toString()))
                 .registerTypeAdapter(LocalDateTime.class,
                         (JsonDeserializer<LocalDateTime>) (json, t, ctx) -> LocalDateTime.parse(json.getAsString()))
                 .create();
@@ -63,15 +63,14 @@ public class Client {
     public static void main(String[] args) {
         System.out.println("Connecting to " + HOST + ":" + PORT + " ...");
 
-        try (Socket         socket = new Socket(HOST, PORT);
-             PrintWriter    out    = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in     = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+        try (Socket socket = new Socket(HOST, PORT);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             System.out.println("Connected!\n");
             new Client(out, in).run();
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println("Connection error: " + e.getMessage());
         }
     }
@@ -91,12 +90,24 @@ public class Client {
             System.out.print("Choose: ");
 
             switch (fScanner.nextLine().trim()) {
-                case "1": locationMenu();   break;
-                case "2": trailMenu();      break;
-                case "3": routeStopMenu();  break;
-                case "4": trailMediaMenu(); break;
-                case "0": running = false;  disconnect(); break;
-                default:  System.out.println("Invalid option.");
+                case "1":
+                    locationMenu();
+                    break;
+                case "2":
+                    trailMenu();
+                    break;
+                case "3":
+                    routeStopMenu();
+                    break;
+                case "4":
+                    trailMediaMenu();
+                    break;
+                case "0":
+                    running = false;
+                    disconnect();
+                    break;
+                default:
+                    System.out.println("Invalid option.");
             }
         }
     }
@@ -118,19 +129,31 @@ public class Client {
         System.out.print("Choose: ");
 
         switch (fScanner.nextLine().trim()) {
-            case "1": getAllLocations();  break;
-            case "2": getLocationById(); break;
-            case "3": addLocation();     break;
-            case "4": updateLocation();  break;
-            case "5": deleteLocation();  break;
-            default:  System.out.println("Invalid option.");
+            case "1":
+                getAllLocations();
+                break;
+            case "2":
+                getLocationById();
+                break;
+            case "3":
+                addLocation();
+                break;
+            case "4":
+                updateLocation();
+                break;
+            case "5":
+                deleteLocation();
+                break;
+            default:
+                System.out.println("Invalid option.");
         }
     }
 
     // Gets: all locations from the server and prints each one
     private void getAllLocations() {
         String raw = send(action("GET_ALL_LOCATIONS"));
-        Type type  = new TypeToken<ServerResponse<ArrayList<Location>>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<ArrayList<Location>>>() {
+        }.getType();
         ServerResponse<ArrayList<Location>> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -143,7 +166,8 @@ public class Client {
         JsonObject req = action("GET_LOCATION_BY_ID");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Location>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Location>>() {
+        }.getType();
         ServerResponse<Location> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -153,8 +177,8 @@ public class Client {
     // Adds: a new location built from user input and prints the created record
     private void addLocation() {
         System.out.println("-- New Location --");
-        double lat  = promptDouble("Latitude:     ");
-        double lon  = promptDouble("Longitude:    ");
+        double lat = promptDouble("Latitude:     ");
+        double lon = promptDouble("Longitude:    ");
         String addr = promptString("Full address: ");
 
         Location loc = new Location(0L, lat, lon, addr, LocalDateTime.now());
@@ -162,7 +186,8 @@ public class Client {
         req.add("data", fGson.toJsonTree(loc));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Location>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Location>>() {
+        }.getType();
         ServerResponse<Location> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -172,9 +197,9 @@ public class Client {
     // Updates: an existing location using user-entered values
     private void updateLocation() {
         System.out.println("-- Update Location --");
-        long   id   = promptLong("Location ID to update: ");
-        double lat  = promptDouble("New latitude:     ");
-        double lon  = promptDouble("New longitude:    ");
+        long id = promptLong("Location ID to update: ");
+        double lat = promptDouble("New latitude:     ");
+        double lon = promptDouble("New longitude:    ");
         String addr = promptString("New full address: ");
 
         Location loc = new Location(id, lat, lon, addr, LocalDateTime.now());
@@ -182,7 +207,8 @@ public class Client {
         req.add("data", fGson.toJsonTree(loc));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Location>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Location>>() {
+        }.getType();
         ServerResponse<Location> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -195,7 +221,8 @@ public class Client {
         JsonObject req = action("DELETE_LOCATION");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Void>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Void>>() {
+        }.getType();
         ServerResponse<Void> resp = fGson.fromJson(raw, type);
         printStatus(resp);
     }
@@ -215,19 +242,31 @@ public class Client {
         System.out.print("Choose: ");
 
         switch (fScanner.nextLine().trim()) {
-            case "1": getAllTrails();  break;
-            case "2": getTrailById(); break;
-            case "3": addTrail();     break;
-            case "4": updateTrail();  break;
-            case "5": deleteTrail();  break;
-            default:  System.out.println("Invalid option.");
+            case "1":
+                getAllTrails();
+                break;
+            case "2":
+                getTrailById();
+                break;
+            case "3":
+                addTrail();
+                break;
+            case "4":
+                updateTrail();
+                break;
+            case "5":
+                deleteTrail();
+                break;
+            default:
+                System.out.println("Invalid option.");
         }
     }
 
     // Gets: all trails from the server and prints each one
     private void getAllTrails() {
         String raw = send(action("GET_ALL_TRAILS"));
-        Type type  = new TypeToken<ServerResponse<ArrayList<Trail>>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<ArrayList<Trail>>>() {
+        }.getType();
         ServerResponse<ArrayList<Trail>> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -240,7 +279,8 @@ public class Client {
         JsonObject req = action("GET_TRAIL_BY_ID");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Trail>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Trail>>() {
+        }.getType();
         ServerResponse<Trail> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -250,10 +290,10 @@ public class Client {
     // Adds: a new trail with stops built from user-entered route stop IDs
     private void addTrail() {
         System.out.println("-- New Trail --");
-        String name        = promptString("Name:           ");
+        String name = promptString("Name:           ");
         String description = promptString("Description:    ");
-        String difficulty  = promptString("Difficulty:     ");
-        double estTime     = promptDouble("Estimated time (hours): ");
+        String difficulty = promptString("Difficulty:     ");
+        double estTime = promptDouble("Estimated time (hours): ");
 
         System.out.println("Enter route stop IDs for this trail (comma-separated, e.g. 1,2,3): ");
         String[] parts = fScanner.nextLine().trim().split(",");
@@ -263,8 +303,7 @@ public class Client {
                 long stopId = Long.parseLong(part.trim());
                 // Creates: a minimal RouteStop shell — the server resolves full data via DAO
                 stops.add(new RouteStop(stopId, null, null, LocalDateTime.now()));
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Skipping invalid stop ID: " + part.trim());
             }
         }
@@ -279,7 +318,8 @@ public class Client {
         req.add("data", fGson.toJsonTree(trail));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Trail>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Trail>>() {
+        }.getType();
         ServerResponse<Trail> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -289,11 +329,11 @@ public class Client {
     // Updates: an existing trail using user-entered values
     private void updateTrail() {
         System.out.println("-- Update Trail --");
-        long   id          = promptLong("Trail ID to update:  ");
-        String name        = promptString("New name:           ");
+        long id = promptLong("Trail ID to update:  ");
+        String name = promptString("New name:           ");
         String description = promptString("New description:    ");
-        String difficulty  = promptString("New difficulty:     ");
-        double estTime     = promptDouble("New estimated time: ");
+        String difficulty = promptString("New difficulty:     ");
+        double estTime = promptDouble("New estimated time: ");
 
         System.out.println("New route stop IDs (comma-separated): ");
         String[] parts = fScanner.nextLine().trim().split(",");
@@ -302,8 +342,7 @@ public class Client {
             try {
                 long stopId = Long.parseLong(part.trim());
                 stops.add(new RouteStop(stopId, null, null, LocalDateTime.now()));
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Skipping invalid stop ID: " + part.trim());
             }
         }
@@ -313,7 +352,8 @@ public class Client {
         req.add("data", fGson.toJsonTree(trail));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Trail>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Trail>>() {
+        }.getType();
         ServerResponse<Trail> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -326,7 +366,8 @@ public class Client {
         JsonObject req = action("DELETE_TRAIL");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Void>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Void>>() {
+        }.getType();
         ServerResponse<Void> resp = fGson.fromJson(raw, type);
         printStatus(resp);
     }
@@ -346,19 +387,31 @@ public class Client {
         System.out.print("Choose: ");
 
         switch (fScanner.nextLine().trim()) {
-            case "1": getAllRouteStops();  break;
-            case "2": getRouteStopById(); break;
-            case "3": addRouteStop();     break;
-            case "4": updateRouteStop();  break;
-            case "5": deleteRouteStop();  break;
-            default:  System.out.println("Invalid option.");
+            case "1":
+                getAllRouteStops();
+                break;
+            case "2":
+                getRouteStopById();
+                break;
+            case "3":
+                addRouteStop();
+                break;
+            case "4":
+                updateRouteStop();
+                break;
+            case "5":
+                deleteRouteStop();
+                break;
+            default:
+                System.out.println("Invalid option.");
         }
     }
 
     // Gets: all route stops from the server and prints each one
     private void getAllRouteStops() {
         String raw = send(action("GET_ALL_ROUTESTOPS"));
-        Type type  = new TypeToken<ServerResponse<ArrayList<RouteStop>>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<ArrayList<RouteStop>>>() {
+        }.getType();
         ServerResponse<ArrayList<RouteStop>> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -371,7 +424,8 @@ public class Client {
         JsonObject req = action("GET_ROUTESTOP_BY_ID");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<RouteStop>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<RouteStop>>() {
+        }.getType();
         ServerResponse<RouteStop> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -382,7 +436,7 @@ public class Client {
     private void addRouteStop() {
         System.out.println("-- New Route Stop --");
         String routeName = promptString("Route name:  ");
-        long   locationId = promptLong("Location ID: ");
+        long locationId = promptLong("Location ID: ");
 
         // Creates: a shell Location with only the ID — server uses it as FK
         Location locShell = new Location(locationId, 0.0, 0.0, LocalDateTime.now());
@@ -391,7 +445,8 @@ public class Client {
         req.add("data", fGson.toJsonTree(rs));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<RouteStop>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<RouteStop>>() {
+        }.getType();
         ServerResponse<RouteStop> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -401,9 +456,9 @@ public class Client {
     // Updates: an existing route stop using user-entered values
     private void updateRouteStop() {
         System.out.println("-- Update Route Stop --");
-        long   id         = promptLong("RouteStop ID to update: ");
-        String routeName  = promptString("New route name:  ");
-        long   locationId = promptLong("New location ID: ");
+        long id = promptLong("RouteStop ID to update: ");
+        String routeName = promptString("New route name:  ");
+        long locationId = promptLong("New location ID: ");
 
         Location locShell = new Location(locationId, 0.0, 0.0, LocalDateTime.now());
         RouteStop rs = new RouteStop(id, routeName, locShell, LocalDateTime.now());
@@ -411,7 +466,8 @@ public class Client {
         req.add("data", fGson.toJsonTree(rs));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<RouteStop>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<RouteStop>>() {
+        }.getType();
         ServerResponse<RouteStop> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -424,7 +480,8 @@ public class Client {
         JsonObject req = action("DELETE_ROUTESTOP");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Void>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Void>>() {
+        }.getType();
         ServerResponse<Void> resp = fGson.fromJson(raw, type);
         printStatus(resp);
     }
@@ -444,19 +501,31 @@ public class Client {
         System.out.print("Choose: ");
 
         switch (fScanner.nextLine().trim()) {
-            case "1": getAllTrailMedia();  break;
-            case "2": getTrailMediaById(); break;
-            case "3": addTrailMedia();     break;
-            case "4": updateTrailMedia();  break;
-            case "5": deleteTrailMedia();  break;
-            default:  System.out.println("Invalid option.");
+            case "1":
+                getAllTrailMedia();
+                break;
+            case "2":
+                getTrailMediaById();
+                break;
+            case "3":
+                addTrailMedia();
+                break;
+            case "4":
+                updateTrailMedia();
+                break;
+            case "5":
+                deleteTrailMedia();
+                break;
+            default:
+                System.out.println("Invalid option.");
         }
     }
 
     // Gets: all trail media from the server and prints each one
     private void getAllTrailMedia() {
         String raw = send(action("GET_ALL_TRAILMEDIA"));
-        Type type  = new TypeToken<ServerResponse<ArrayList<TrailMedia>>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<ArrayList<TrailMedia>>>() {
+        }.getType();
         ServerResponse<ArrayList<TrailMedia>> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -469,7 +538,8 @@ public class Client {
         JsonObject req = action("GET_TRAILMEDIA_BY_ID");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<TrailMedia>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<TrailMedia>>() {
+        }.getType();
         ServerResponse<TrailMedia> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -479,19 +549,20 @@ public class Client {
     // Adds: a new trail media record built from user input
     private void addTrailMedia() {
         System.out.println("-- New Trail Media --");
-        long   trailId   = promptLong("Trail ID:         ");
+        long trailId = promptLong("Trail ID:         ");
         String stopInput = promptString("Stop ID (or blank for none): ");
-        Long   stopId    = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
+        Long stopId = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
         String mediaType = promptString("Media type (image/video/audio): ");
-        String url       = promptString("URL:              ");
-        String caption   = promptString("Caption:          ");
+        String url = promptString("URL:              ");
+        String caption = promptString("Caption:          ");
 
         TrailMedia tm = new TrailMedia(0L, trailId, stopId, mediaType, url, caption, LocalDateTime.now());
         JsonObject req = action("ADD_TRAILMEDIA");
         req.add("data", fGson.toJsonTree(tm));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<TrailMedia>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<TrailMedia>>() {
+        }.getType();
         ServerResponse<TrailMedia> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -501,20 +572,21 @@ public class Client {
     // Updates: an existing trail media record using user-entered values
     private void updateTrailMedia() {
         System.out.println("-- Update Trail Media --");
-        long   id        = promptLong("TrailMedia ID to update: ");
-        long   trailId   = promptLong("New trail ID:            ");
+        long id = promptLong("TrailMedia ID to update: ");
+        long trailId = promptLong("New trail ID:            ");
         String stopInput = promptString("New stop ID (or blank for none): ");
-        Long   stopId    = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
+        Long stopId = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
         String mediaType = promptString("New media type:  ");
-        String url       = promptString("New URL:         ");
-        String caption   = promptString("New caption:     ");
+        String url = promptString("New URL:         ");
+        String caption = promptString("New caption:     ");
 
         TrailMedia tm = new TrailMedia(id, trailId, stopId, mediaType, url, caption, LocalDateTime.now());
         JsonObject req = action("UPDATE_TRAILMEDIA");
         req.add("data", fGson.toJsonTree(tm));
 
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<TrailMedia>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<TrailMedia>>() {
+        }.getType();
         ServerResponse<TrailMedia> resp = fGson.fromJson(raw, type);
         printStatus(resp);
         if (resp.isOk() && resp.getData() != null)
@@ -527,7 +599,8 @@ public class Client {
         JsonObject req = action("DELETE_TRAILMEDIA");
         req.addProperty("id", id);
         String raw = send(req);
-        Type type  = new TypeToken<ServerResponse<Void>>(){}.getType();
+        Type type = new TypeToken<ServerResponse<Void>>() {
+        }.getType();
         ServerResponse<Void> resp = fGson.fromJson(raw, type);
         printStatus(resp);
     }
@@ -541,8 +614,7 @@ public class Client {
         try {
             fOut.println(fGson.toJson(request));
             return fIn.readLine();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return fGson.toJson(ServerResponse.error("IO error: " + e.getMessage()));
         }
     }
@@ -571,8 +643,7 @@ public class Client {
             System.out.print(prompt);
             try {
                 return Long.parseLong(fScanner.nextLine().trim());
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Please enter a valid number.");
             }
         }
@@ -584,8 +655,7 @@ public class Client {
             System.out.print(prompt);
             try {
                 return Double.parseDouble(fScanner.nextLine().trim());
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Please enter a valid number.");
             }
         }

@@ -12,7 +12,7 @@ public class ClientRequest {
     // Creates: an empty ClientRequest — needed by Jackson deserialisation
     public ClientRequest() {
         _requestType = "";
-        _payload     = Map.of();
+        _payload = Map.of();
     }
 
     // === Public API ===
@@ -49,8 +49,7 @@ public class ClientRequest {
             return -1;
         try {
             return Integer.parseInt(v.toString());
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             return -1;
         }
     }
