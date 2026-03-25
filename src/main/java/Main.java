@@ -458,7 +458,7 @@ public class Main {
         System.out.println("\t2. Exit");
         System.out.println("_______________________");
         System.out.print("Input: ");
-        int choice = input.nextInt();
+        int choice = input.nextInt(); input.nextLine();
         while (choice != 1 && choice != 2) {
             System.out.println("Try again");
             choice = input.nextInt(); input.nextLine();
@@ -475,7 +475,7 @@ public class Main {
         System.out.println("5. Return");
         System.out.println("__________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt();
+        int choice = input.nextInt(); input.nextLine();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt(); input.nextLine();
@@ -495,7 +495,7 @@ public class Main {
         System.out.println("5. Return");
         System.out.println("__________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt();
+        int choice = input.nextInt(); input.nextLine();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt(); input.nextLine();
@@ -514,7 +514,7 @@ public class Main {
         System.out.println("5. Return");
         System.out.println("__________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt();
+        int choice = input.nextInt(); input.nextLine();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt(); input.nextLine();
@@ -534,10 +534,10 @@ public class Main {
         System.out.println("5. Return");
         System.out.println("__________________________");
         System.out.print("Input: ");
-        int choice = input.nextInt();
+        int choice = input.nextInt(); input.nextLine();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
-            choice = input.nextInt();
+            choice = input.nextInt(); input.nextLine();
         }
         if(choice == 5) { displayCRUD(); return; }
 
@@ -555,7 +555,7 @@ public class Main {
         System.out.println("5. Return");
         System.out.println("_______________________");
         System.out.print("Input: ");
-        int choice = input.nextInt();
+        int choice = input.nextInt(); input.nextLine();
         while (choice > 5 || choice < 1) {
             System.out.println("Try again");
             choice = input.nextInt(); input.nextLine();
