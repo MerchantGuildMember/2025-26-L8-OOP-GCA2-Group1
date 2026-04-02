@@ -8,6 +8,10 @@ public class TrailMediaDTO {
     private String url;
     private String caption;
     private LocalDateTime creation_time;
+    private byte[] fFileData;
+    private String fFileName;
+    private String fContentType;
+    private int fFileSize;
 
 
     // Constructors
