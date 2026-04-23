@@ -224,9 +224,85 @@ public class ClientHandler implements Runnable {
                     return toJson(ServerResponse.<Void>error("TrailMedia not found: " + id));
                 }
 
-                // ── Lifecycle ─────────────────────────────────────────
+                //  Binary File Upload (F18)
+                case "UPLOAD_FILE": {
+                    // Gets: the Base64-encoded file data and metadata from the request
+                    String base64Data  = req.get("fileData").getAsString();
+                    String fileName    = req.get("fileName").getAsString();
+                    String contentType = req.get("contentType").getAsString();
+                    int fileSize       = req.get("fileSize").getAsInt();
+                    long trailId       = req.get("trailId").getAsLong();
+                    String mediaType   = req.get("mediaType").getAsString();
+
+                    Long stopId = null;
+                    if (req.has("stopId") && !req.get("stopId").isJsonNull())
+                        stopId = req.get("stopId").getAsLong();
+
+                    // Converts: Base64 string back to raw bytes for database storage
+                    byte[] fileBytes = java.util.Base64.getDecoder().decode(base64Data);
+
+                    TrailMedia tm = new TrailMedia(
+                            0L, trailId, stopId, mediaType, "", "",
+                            LocalDateTime.now(), fileBytes, fileName, contentType, fileSize
+                    );
+
+                    TrailMedia inserted = fTrailMediaDAO.insert(tm);
+                    return toJson(ServerResponse.ok("File uploaded, id=" + inserted.getId(), inserted));
+                }
+
+                // Binary File Retrieval (F19)
+                case "GET_FILE": {
+                    // Gets: the TrailMedia record including BLOB data by ID
+                    long id = req.get("id").getAsLong();
+                    ServerResponse<TrailMedia> result = fTrailMediaDAO.displayById(id);
+
+                    if (!result.isOk() || result.getData() == null)
+                        return toJson(ServerResponse.<Void>error("File not found: " + id));
+
+                    TrailMedia tm = result.getData();
+
+                    if (tm.getFFileData() == null)
+                        return toJson(ServerResponse.<Void>error("No file stored for id=" + id));
+
+                    // Converts: raw bytes to Base64 string for safe JSON transport
+                    String base64 = java.util.Base64.getEncoder().encodeToString(tm.getFFileData());
+
+                    JsonObject payload = new JsonObject();
+                    payload.addProperty("id",          tm.getId());
+                    payload.addProperty("fileName",    tm.getFFileName());
+                    payload.addProperty("contentType", tm.getFContentType());
+                    payload.addProperty("fileSize",    tm.getFFileSize());
+                    payload.addProperty("fileData",    base64);
+
+                    return toJson(ServerResponse.ok("File retrieved", payload));
+                }
+
+                // File Metadata Query (F20)
+                case "GET_METADATA": {
+                    // Gets: metadata only — BLOB column is deliberately not fetched
+                    long id = req.get("id").getAsLong();
+                    ServerResponse<TrailMedia> result = fTrailMediaDAO.getMetadataById(id);
+
+                    if (!result.isOk() || result.getData() == null)
+                        return toJson(ServerResponse.<Void>error("Metadata not found: " + id));
+
+                    TrailMedia tm = result.getData();
+
+                    // Builds: a metadata-only response without the binary payload
+                    JsonObject metadata = new JsonObject();
+                    metadata.addProperty("id",          tm.getId());
+                    metadata.addProperty("fileName",    tm.getFFileName());
+                    metadata.addProperty("contentType", tm.getFContentType());
+                    metadata.addProperty("fileSize",    tm.getFFileSize());
+
+                    return toJson(ServerResponse.ok("Metadata retrieved", metadata));
+                }
+
+                // Lifecycle
                 case "DISCONNECT":
                     return toJson(ServerResponse.<Void>ok("Goodbye", null));
+
+
 
                 default:
                     return toJson(ServerResponse.<Void>error("Unknown action: " + action));
