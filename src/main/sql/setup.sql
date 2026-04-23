@@ -49,7 +49,7 @@ CREATE TABLE location (
      FOREIGN KEY (stop_id) REFERENCES route_stop(id)
  );
 
- CREATE TABLE trail_media (
+CREATE TABLE trail_media (
      id INT AUTO_INCREMENT PRIMARY KEY,
      trail_id INT NOT NULL,
      stop_id INT NULL,
@@ -57,6 +57,10 @@ CREATE TABLE location (
      url VARCHAR(255) NOT NULL,
      caption VARCHAR(255),
      creation_time DATETIME NOT NULL,
+     file_name VARCHAR(255) NOT NULL DEFAULT '',
+     content_type VARCHAR(100) NOT NULL DEFAULT '',
+     file_size INT NOT NULL DEFAULT 0,
+     media_data MEDIUMBLOB,
      FOREIGN KEY (trail_id) REFERENCES trail(id),
      FOREIGN KEY (stop_id) REFERENCES route_stop(id)
  );
