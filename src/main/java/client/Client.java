@@ -491,6 +491,7 @@ public class Client {
     // ─────────────────────────────────────────────────────────────────────
 
     // Displays: the TrailMedia CRUD sub-menu
+    // Displays: the TrailMedia CRUD sub-menu
     private void trailMediaMenu() {
         System.out.println("\n--- Trail Media ---");
         System.out.println("1 - Display All");
@@ -498,6 +499,9 @@ public class Client {
         System.out.println("3 - Add");
         System.out.println("4 - Update");
         System.out.println("5 - Delete");
+        System.out.println("6 - Upload File (F18)");
+        System.out.println("7 - Download File (F19)");
+        System.out.println("8 - Get Metadata Only (F20)");
         System.out.print("Choose: ");
 
         switch (fScanner.nextLine().trim()) {
@@ -515,6 +519,15 @@ public class Client {
                 break;
             case "5":
                 deleteTrailMedia();
+                break;
+            case "6":
+                uploadFile();
+                break;
+            case "7":
+                downloadFile();
+                break;
+            case "8":
+                getMetadata();
                 break;
             default:
                 System.out.println("Invalid option.");
@@ -603,6 +616,113 @@ public class Client {
         }.getType();
         ServerResponse<Void> resp = fGson.fromJson(raw, type);
         printStatus(resp);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // BINARY FILE HANDLING
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Uploads: a binary file from disk — reads bytes, Base64-encodes, sends to server (F18)
+    private void uploadFile() {
+        System.out.println("-- Upload File --");
+        long trailId      = promptLong("Trail ID: ");
+        String stopInput  = promptString("Stop ID (or blank for none): ");
+        Long stopId       = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
+        String mediaType  = promptString("Media type (IMAGE/VIDEO/AUDIO): ");
+        String filePath   = promptString("Full path to file (e.g. C:/files/photo.jpg): ");
+
+        try {
+            // Reads: the file from disk into a byte array
+            java.nio.file.Path path = java.nio.file.Paths.get(filePath);
+            byte[] fileBytes        = java.nio.file.Files.readAllBytes(path);
+            String fileName         = path.getFileName().toString();
+            int fileSize            = fileBytes.length;
+
+            // Detects: MIME type from file extension; falls back to octet-stream if unknown
+            String contentType = java.nio.file.Files.probeContentType(path);
+            if (contentType == null)
+                contentType = "application/octet-stream";
+
+            // Converts: raw bytes to Base64 string for safe JSON transport
+            String base64 = java.util.Base64.getEncoder().encodeToString(fileBytes);
+
+            JsonObject req = action("UPLOAD_FILE");
+            req.addProperty("trailId",     trailId);
+            req.addProperty("mediaType",   mediaType);
+            req.addProperty("fileName",    fileName);
+            req.addProperty("contentType", contentType);
+            req.addProperty("fileSize",    fileSize);
+            req.addProperty("fileData",    base64);
+            if (stopId != null)
+                req.addProperty("stopId", stopId);
+
+            String raw  = send(req);
+            Type   type = new TypeToken<ServerResponse<TrailMedia>>() {}.getType();
+            ServerResponse<TrailMedia> resp = fGson.fromJson(raw, type);
+            printStatus(resp);
+            if (resp.isOk())
+                System.out.println("  File uploaded successfully.");
+        }
+        catch (java.io.IOException e) {
+            System.out.println("Could not read file: " + e.getMessage());
+        }
+    }
+
+    // Downloads: a binary file from the server and saves it to disk (F19)
+    private void downloadFile() {
+        System.out.println("-- Download File --");
+        long id          = promptLong("TrailMedia ID: ");
+        String outputDir = promptString("Save to folder (e.g. C:/downloads): ");
+
+        JsonObject req = action("GET_FILE");
+        req.addProperty("id", id);
+        String raw = send(req);
+
+        Type type = new TypeToken<ServerResponse<com.google.gson.JsonObject>>() {}.getType();
+        ServerResponse<com.google.gson.JsonObject> resp = fGson.fromJson(raw, type);
+        printStatus(resp);
+
+        if (!resp.isOk() || resp.getData() == null)
+            return;
+
+        com.google.gson.JsonObject payload = resp.getData();
+        String fileName = payload.get("fileName").getAsString();
+        String base64   = payload.get("fileData").getAsString();
+
+        // Converts: Base64 string back to raw bytes
+        byte[] fileBytes = java.util.Base64.getDecoder().decode(base64);
+
+        // Saves: reconstructed file to disk preserving the original filename
+        try {
+            java.nio.file.Path outPath = java.nio.file.Paths.get(outputDir, fileName);
+            java.nio.file.Files.write(outPath, fileBytes);
+            System.out.println("  File saved to: " + outPath.toAbsolutePath());
+        }
+        catch (java.io.IOException e) {
+            System.out.println("Could not save file: " + e.getMessage());
+        }
+    }
+
+    // Gets: metadata only for a stored file — no binary data downloaded (F20)
+    private void getMetadata() {
+        System.out.println("-- File Metadata --");
+        long id = promptLong("TrailMedia ID: ");
+
+        JsonObject req = action("GET_METADATA");
+        req.addProperty("id", id);
+        String raw = send(req);
+
+        Type type = new TypeToken<ServerResponse<com.google.gson.JsonObject>>() {}.getType();
+        ServerResponse<com.google.gson.JsonObject> resp = fGson.fromJson(raw, type);
+        printStatus(resp);
+
+        if (resp.isOk() && resp.getData() != null) {
+            com.google.gson.JsonObject meta = resp.getData();
+            System.out.println("  ID:           " + meta.get("id").getAsLong());
+            System.out.println("  File name:    " + meta.get("fileName").getAsString());
+            System.out.println("  Content type: " + meta.get("contentType").getAsString());
+            System.out.println("  File size:    " + meta.get("fileSize").getAsInt() + " bytes");
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────
