@@ -499,9 +499,9 @@ public class Client {
         System.out.println("3 - Add");
         System.out.println("4 - Update");
         System.out.println("5 - Delete");
-        System.out.println("6 - Upload File (F18)");
-        System.out.println("7 - Download File (F19)");
-        System.out.println("8 - Get Metadata Only (F20)");
+        System.out.println("6 - Upload File F18");
+        System.out.println("7 - Download File F19");
+        System.out.println("8 - Get Metadata Only F20");
         System.out.print("Choose: ");
 
         switch (fScanner.nextLine().trim()) {
