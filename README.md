@@ -107,3 +107,45 @@ The server uses `Executors.newCachedThreadPool()`.
 Each accepted `Socket` is immediately wrapped in a `ClientHandler` and submitted
 to the pool, so the accept loop is never blocked by a slow client.  
 The pool shuts down gracefully (5-second timeout) when the server process exits.
+
+## Binary File Handling (F17–F20)
+
+The `trail_media` table has been extended with a `MEDIUMBLOB` column (`file_data`)
+and three metadata columns: `file_name VARCHAR`, `content_type VARCHAR`, `file_size INT`.
+
+### Upload flow (F18)
+1. Client reads a file from disk using `Files.readAllBytes()`
+2. Client Base64-encodes the bytes and sends them in a JSON `UPLOAD_FILE` request
+3. Server decodes the Base64 string back to `byte[]`
+4. Server stores the bytes using `PreparedStatement.setBinaryStream()`
+5. Server returns a `ServerResponse<TrailMedia>` with the auto-generated ID
+
+### Retrieval flow (F19)
+1. Client sends a `GET_FILE` request with the record ID
+2. Server fetches the BLOB using `ResultSet.getBytes()`
+3. Server Base64-encodes the bytes and returns them in a `ServerResponse`
+4. Client decodes the Base64 string and writes the file to disk
+5. Original filename and extension are preserved
+
+### Metadata query (F20)
+- Client sends `GET_METADATA` with a record ID
+- Server executes a SELECT that lists every column **except** `file_data`
+- No binary data is loaded into memory or sent over the socket
+- Server returns `ServerResponse` with `fileName`, `contentType`, `fileSize` only
+
+---
+
+## Unit Tests — Stage 3 (F22)
+
+Test class: `TrailMediaDaoTest` — author: Maryna Hordiienko
+
+| Test | Category | What it verifies |
+|---|---|---|
+| `displayAll_returnsNonEmptyList_whenSeedDataExists` | DAO read | `displayAll()` returns non-null non-empty list |
+| `insert_returnsEntityWithGeneratedId_whenValidMediaProvided` | Insert + ID | Inserted record has positive auto-generated ID |
+| `displayById_returnsCorrectEntity_whenIdExists` | DAO read | `displayById()` returns correct entity for known ID |
+| `displayById_returnsErrorResponse_whenIdDoesNotExist` | Error handling | Error response returned for missing ID |
+| `trailMedia_jsonRoundTrip_preservesAllFields` | JSON round-trip | All fields preserved after serialise → deserialise |
+
+All 5 tests pass. `@BeforeEach` used for test independence.
+Tests clean up inserted rows after each test.
