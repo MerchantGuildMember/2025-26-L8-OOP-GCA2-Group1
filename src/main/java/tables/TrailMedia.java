@@ -29,6 +29,7 @@ public class TrailMedia {
 
     // Constructors
 
+    // full TrailMedia constructor
     public TrailMedia(Long id, Long trail_id, Long stop_id, String media_type, String url, String caption,
                       LocalDateTime creation_time, byte[] fFileData, String fFileName,
                       String fContentType, int fFileSize) {
@@ -55,11 +56,13 @@ public class TrailMedia {
         this.fFileSize = fFileSize;
     }
 
+    // TrailMedia constructor without file information
     public TrailMedia(Long id, Long trail_id, Long stop_id, String media_type, String url, String caption,
                       LocalDateTime creation_time) {
         this(id, trail_id, stop_id, media_type, url, caption, creation_time, null, "", "", 0);
     }
 
+    // Trailmedia constructor without stop ids
     public TrailMedia(Long id, Long trail_id, String caption, String url, String media_type,
                       LocalDateTime creation_time) {
         this(id, trail_id, null, media_type, url, caption, creation_time, null, "", "", 0);

@@ -15,6 +15,9 @@ import java.util.Scanner;
  * @author Aleksy Cieslak
  * @author Maryna Hordiienko
  */
+
+// TODO F21 Disconnect / Exit 20/04/2026
+//      F22 Tests : All CRUD actions, minimums and maximums
 public class Main {
 
     static ServerClient server = new ServerClient("localhost", 8080);

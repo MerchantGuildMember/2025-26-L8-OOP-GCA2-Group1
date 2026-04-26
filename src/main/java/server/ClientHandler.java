@@ -90,6 +90,13 @@ public class ClientHandler implements Runnable {
                 String response = dispatch(line);
                 System.out.println("[" + thread + "] >> " + response);
                 out.println(response);
+
+                // F21: exit the loop cleanly when the client sends DISCONNECT
+                // so the worker thread is released without waiting for EOF.
+                if (isDisconnect(line)) {
+                    System.out.println("[" + thread + "] Client requested DISCONNECT — closing connection.");
+                    break;
+                }
             }
 
         } catch (IOException e) {
@@ -97,6 +104,17 @@ public class ClientHandler implements Runnable {
         }
 
         System.out.println("[" + thread + "] Disconnected.");
+    }
+
+    // Checks: whether the given request line is a DISCONNECT action.
+    // Returns false for malformed JSON so a bad line never takes the thread down.
+    private boolean isDisconnect(String requestJson) {
+        try {
+            JsonObject req = JsonParser.parseString(requestJson).getAsJsonObject();
+            return req.has("action") && "DISCONNECT".equals(req.get("action").getAsString());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // === Helpers ===
