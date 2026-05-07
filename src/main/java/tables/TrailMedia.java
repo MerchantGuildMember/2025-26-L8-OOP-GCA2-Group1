@@ -57,6 +57,17 @@ public class TrailMedia {
     }
 
     // TrailMedia constructor without file information
+
+    /**
+     * Full constructor
+     * @param id -
+     * @param trail_id -
+     * @param stop_id
+     * @param media_type
+     * @param url
+     * @param caption
+     * @param creation_time
+     */
     public TrailMedia(Long id, Long trail_id, Long stop_id, String media_type, String url, String caption,
                       LocalDateTime creation_time) {
         this(id, trail_id, stop_id, media_type, url, caption, creation_time, null, "", "", 0);
