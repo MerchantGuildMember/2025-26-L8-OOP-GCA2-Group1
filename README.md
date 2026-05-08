@@ -31,7 +31,7 @@ Trail Tracker is a multi-user client-server application for managing hiking trai
 ### Step 1 — Set up the database
 Open phpMyAdmin or a MySQL terminal and run:
 ```
-src/main/resources/mysqlSetup.sql
+src/main/sql/mysqlSetup.sql
 ```
 This creates the `oop_gca2` database, user, tables, and seed data from scratch.
 
@@ -50,7 +50,7 @@ Run `server.Server` — listens on port 8080.
 Run `client.Client` — connects to localhost:8080 and presents a menu.
 
 ### Step 5 — Run tests
-Right-click `TrailMediaExtendedTest` or `ServerIntegrationTest` → Run with Coverage.
+Right-click `TrailMediaDaoTest` or `ServerIntegrationTest` → Run with Coverage.
 Note: `ServerIntegrationTest` requires the server to be running first.
 
 ---
@@ -83,7 +83,7 @@ All client-server communication uses newline-delimited JSON. Every request carri
 ### ServerResponse shape
 ```json
 {
-  "fStatus":  "OK" | "ERROR" | "Success" | "Error",
+  "fStatus":  "OK" | "ERROR",
   "fMessage": "human-readable message",
   "fData":    "<typed payload or null>"
 }
@@ -177,9 +177,9 @@ The `trail_media` table has been extended with:
 file_name     VARCHAR(255) NOT NULL DEFAULT '',
 content_type  VARCHAR(100) NOT NULL DEFAULT '',
 file_size     INT          NOT NULL DEFAULT 0,
-file_data     MEDIUMBLOB
+file_data     LONGBLOB
 ```
-`MEDIUMBLOB` stores up to 16 MB — sufficient for images, audio clips, and documents. Metadata columns allow listing files without loading binary data.
+`LONGBLOB` stores up to 4 GB — sufficient for images, audio clips, and documents. Metadata columns allow listing files without loading binary data.
 
 ### Upload flow (F18)
 1. Client reads a file from disk using `Files.readAllBytes()`
@@ -210,9 +210,8 @@ file_data     MEDIUMBLOB
 
 | File | Location | Tests | Author |
 |---|---|---|---|
-| `TrailMediaDaoTest` | `src/main/java/test/` | 5 (Stage 3 baseline) | Maryna Hordiienko |
-| `TrailMediaExtendedTest` | `src/main/java/test/` | 15 (Stage 4 extended) | Maryna Hordiienko |
-| `ServerIntegrationTest` | `src/main/java/test/` | 7 (server scenario) | Maryna Hordiienko |
+| `TrailMediaDaoTest` | `src/test/java/test/` | 5 (DAO baseline) | Maryna Hordiienko |
+| `ServerIntegrationTest` | `src/test/java/test/` | 8 (server scenarios) | Maryna Hordiienko |
 | `TrailMediaTest` | `src/test/java/tables/` | 2 | Aleksy Cieslak |
 | `LocationTest` | `src/test/java/tables/` | 2 | Aleksy Cieslak |
 | `RouteStopTest` | `src/test/java/tables/` | 1 | Aleksy Cieslak |

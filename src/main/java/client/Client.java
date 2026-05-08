@@ -563,7 +563,7 @@ public class Client {
     private void addTrailMedia() {
         System.out.println("-- New Trail Media --");
         long trailId = promptLong("Trail ID:         ");
-        String stopInput = promptString("Stop ID (or blank for none): ");
+        String stopInput = promptOptionalString("Stop ID (or blank for none): ");
         Long stopId = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
         String mediaType = promptString("Media type (image/video/audio): ");
         String url = promptString("URL:              ");
@@ -587,7 +587,7 @@ public class Client {
         System.out.println("-- Update Trail Media --");
         long id = promptLong("TrailMedia ID to update: ");
         long trailId = promptLong("New trail ID:            ");
-        String stopInput = promptString("New stop ID (or blank for none): ");
+        String stopInput = promptOptionalString("New stop ID (or blank for none): ");
         Long stopId = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
         String mediaType = promptString("New media type:  ");
         String url = promptString("New URL:         ");
@@ -626,7 +626,7 @@ public class Client {
     private void uploadFile() {
         System.out.println("-- Upload File --");
         long trailId      = promptLong("Trail ID: ");
-        String stopInput  = promptString("Stop ID (or blank for none): ");
+        String stopInput  = promptOptionalString("Stop ID (or blank for none): ");
         Long stopId       = stopInput.isBlank() ? null : Long.parseLong(stopInput.trim());
         String mediaType  = promptString("Media type (IMAGE/VIDEO/AUDIO): ");
         String filePath   = promptString("Full path to file (e.g. C:/files/photo.jpg): ");
@@ -790,5 +790,11 @@ public class Client {
                 return value;
             System.out.println("Value cannot be blank.");
         }
+    }
+
+    // Gets: an optional string — returns empty string if the user just presses Enter
+    private String promptOptionalString(String prompt) {
+        System.out.print(prompt);
+        return fScanner.nextLine().trim();
     }
 }

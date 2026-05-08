@@ -13,6 +13,16 @@ import java.util.stream.Collectors;
 
 import utils.JsonUtil;
 
+/**
+ * JDBC implementation of {@link TrailMediaDAO} for the Trail Tracker application.
+ *
+ * <p>Provides CRUD operations for {@link tables.TrailMedia} records backed by a
+ * MySQL database, including binary file upload (BLOB), metadata-only retrieval,
+ * and file data retrieval. All queries use {@link java.sql.PreparedStatement}
+ * to prevent SQL injection.</p>
+ *
+ * @author Aleksy Cieslak
+ */
 public class JdbcTrailMediaDAO implements TrailMediaDAO {
 
     private String _url;
@@ -43,13 +53,13 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
                 list.add(mapRow(rs, true));
             }
         }
-        return new ServerResponse<>("Success", "Retrieve trail media", list);
+        return ServerResponse.ok("Retrieved trail media", list);
     }
 
     @Override
     public ServerResponse<TrailMedia> displayById(Long id) throws Exception {
         if (id == null || id <= 0)
-            return new ServerResponse<>("Error", "ID Error" + id, null);
+            return ServerResponse.error("ID Error: " + id);
         String sql = "SELECT id, trail_id, stop_id, media_type, url, caption, creation_time, " +
                 "file_data, file_name, content_type, file_size FROM trail_media WHERE id = ?";
         try (Connection c = open();
@@ -57,8 +67,8 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next())
-                    return new ServerResponse<>("Error", "Trail media not found", null);
-                return new ServerResponse<>("Success", "Retrieve trail media", mapRow(rs, true));
+                    return ServerResponse.error("Trail media not found: " + id);
+                return ServerResponse.ok("Retrieved trail media", mapRow(rs, true));
             }
         }
     }
@@ -66,7 +76,7 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
     // F20 — metadata only, BLOB column is not fetched
     public ServerResponse<TrailMedia> getMetadataById(Long id) throws Exception {
         if (id == null || id <= 0)
-            return new ServerResponse<>("Error", "ID Error" + id, null);
+            return ServerResponse.error("ID Error: " + id);
         String sql = "SELECT id, trail_id, stop_id, media_type, url, caption, creation_time, " +
                 "file_name, content_type, file_size FROM trail_media WHERE id = ?";
         try (Connection c = open();
@@ -74,8 +84,8 @@ public class JdbcTrailMediaDAO implements TrailMediaDAO {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next())
-                    return new ServerResponse<>("Error", "Trail media not found", null);
-                return new ServerResponse<>("Success", "Retrieve trail media metadata", mapRow(rs, false));
+                    return ServerResponse.error("Trail media not found: " + id);
+                return ServerResponse.ok("Retrieved trail media metadata", mapRow(rs, false));
             }
         }
     }

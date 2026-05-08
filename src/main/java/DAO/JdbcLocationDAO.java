@@ -13,6 +13,15 @@ import java.util.stream.Collectors;
 
 import utils.JsonUtil;
 
+/**
+ * JDBC implementation of {@link LocationDAO} for the Trail Tracker application.
+ *
+ * <p>Provides CRUD operations for {@link tables.Location} records backed by a
+ * MySQL database. All queries use {@link java.sql.PreparedStatement} to prevent
+ * SQL injection.</p>
+ *
+ * @author Aleksy Cieslak
+ */
 public class JdbcLocationDAO implements LocationDAO {
     private String _url;
     private String _user;
@@ -42,7 +51,7 @@ public class JdbcLocationDAO implements LocationDAO {
             ArrayList<Location> out = new ArrayList<>();
             while (rs.next())
                 out.add(mapRow(rs));
-            return new ServerResponse<>("Success", "Retrieved locations", out);
+            return ServerResponse.ok("Retrieved locations", out);
         }
 
     }
@@ -50,7 +59,7 @@ public class JdbcLocationDAO implements LocationDAO {
     @Override
     public ServerResponse<Location> displayById(Long id) throws Exception {
         if (id == null || id <= 0)
-            return new ServerResponse<>("Error", "ID Error " + id, null);
+            return ServerResponse.error("ID Error " + id);
 
 
         String sql = "SELECT id, latitude, longitude, full_address, created_at FROM location WHERE id = ?";
@@ -62,8 +71,8 @@ public class JdbcLocationDAO implements LocationDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next())
-                    return new ServerResponse<>("Error", "Location is not found ", null);
-                return new ServerResponse<>("Success", "Found location ", mapRow(rs));
+                    return ServerResponse.error("Location not found: " + id);
+                return ServerResponse.ok("Found location", mapRow(rs));
             }
         }
     }

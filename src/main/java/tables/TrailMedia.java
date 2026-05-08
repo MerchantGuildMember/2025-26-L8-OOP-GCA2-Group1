@@ -170,5 +170,16 @@ public class TrailMedia {
         this.fFileSize = fFileSize;
     }
 
+    @Override
+    public String toString() {
+        return "TrailMedia{id=" + id +
+                ", trail_id=" + trail_id +
+                ", stop_id=" + stop_id +
+                ", type=" + media_type +
+                ", caption='" + caption + '\'' +
+                ", file=" + (fFileName.isEmpty() ? "none" : fFileName + " (" + fFileSize + "B)") +
+                ", created=" + creation_time +
+                '}';
+    }
 
 }

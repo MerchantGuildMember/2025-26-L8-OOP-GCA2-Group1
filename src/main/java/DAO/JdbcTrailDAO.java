@@ -14,6 +14,16 @@ import java.util.stream.Collectors;
 
 import utils.JsonUtil;
 
+/**
+ * JDBC implementation of {@link TrailDAO} for the Trail Tracker application.
+ *
+ * <p>Provides CRUD operations for {@link tables.Trail} records backed by a
+ * MySQL database. Eagerly loads associated {@link tables.RouteStop} and
+ * {@link tables.Location} entities. All queries use
+ * {@link java.sql.PreparedStatement} to prevent SQL injection.</p>
+ *
+ * @author Aleksy Cieslak
+ */
 public class JdbcTrailDAO implements TrailDAO {
     private String _url;
     private String _user;
@@ -49,9 +59,6 @@ public class JdbcTrailDAO implements TrailDAO {
                 double estimatedTime = rs.getDouble("estimated_time");
 
                 ArrayList<RouteStop> stops = new ArrayList<>(loadStopsForTrail(id));
-                if (stops.isEmpty()) {
-                    continue;
-                }
 
                 Trail trail = new Trail(id, name, description, difficulty, estimatedTime, stops);
                 trails.add(trail);
@@ -59,13 +66,13 @@ public class JdbcTrailDAO implements TrailDAO {
         }
 
 
-        return new ServerResponse<>("Success", "Retrieve trails", trails);
+        return ServerResponse.ok("Retrieved trails", trails);
     }
 
     @Override
     public ServerResponse<Trail> displayById(Long id) throws Exception {
         if (id == null || id <= 0) {
-            return new ServerResponse<>("Error", "ID Error" + id, null);
+            return ServerResponse.error("ID Error: " + id);
         }
 
         String sql = "SELECT id, name, description, difficulty, estimated_time FROM trail WHERE id = ?";
@@ -77,7 +84,7 @@ public class JdbcTrailDAO implements TrailDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    return new ServerResponse<>("Error", "Trail not found", null);
+                    return ServerResponse.error("Trail not found: " + id);
 
                 }
 
@@ -89,7 +96,7 @@ public class JdbcTrailDAO implements TrailDAO {
                 ArrayList<RouteStop> stops = new ArrayList<>(loadStopsForTrail(id));
 
                 Trail trail = new Trail(id, name, description, difficulty, estimatedTime, stops);
-                return new ServerResponse<>("Success", "Retrieve trail", trail);
+                return ServerResponse.ok("Retrieved trail", trail);
             }
         }
     }

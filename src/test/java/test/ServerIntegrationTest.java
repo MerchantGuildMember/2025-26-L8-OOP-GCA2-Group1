@@ -53,28 +53,25 @@ class ServerIntegrationTest {
 
     // ── GET_ALL_TRAILMEDIA ────────────────────────────────────────────────
 
-    // Checks: server returns a Success response with a non-empty list for GET_ALL_TRAILMEDIA
+    // Checks: server returns OK response with a non-empty list for GET_ALL_TRAILMEDIA
     @Test
-    void server_getAllTrailMedia_returnsSuccessWithNonEmptyList() throws Exception {
+    void server_getAllTrailMedia_returnsOkWithNonEmptyList() throws Exception {
         String request = fClient.buildAction("GET_ALL_TRAILMEDIA");
         String raw     = fClient.send(request);
 
         assertNotNull(raw, "Server response must not be null");
-        assertTrue(raw.contains("Success"),
-                "Response must contain 'Success' status");
 
-        // Parses: the JSON response into a typed ServerResponse
         Type type = new TypeToken<ServerResponse<ArrayList<TrailMedia>>>() {}.getType();
         ServerResponse<ArrayList<TrailMedia>> response = fGson.fromJson(raw, type);
 
+        assertTrue(response.isOk(), "Response status must be OK");
         assertNotNull(response.getData(), "Data must not be null");
-        assertFalse(response.getData().isEmpty(),
-                "List must contain seed data records");
+        assertFalse(response.getData().isEmpty(), "List must contain seed data records");
     }
 
     // ── GET_TRAILMEDIA_BY_ID ──────────────────────────────────────────────
 
-    // Checks: server returns Success and correct entity when requested by valid ID
+    // Checks: server returns OK and correct entity when requested by valid ID
     @Test
     void server_getTrailMediaById_returnsCorrectEntity_whenIdExists() throws Exception {
         // Uses: seed data ID 1 which is always present after mysqlSetup.sql
@@ -82,25 +79,27 @@ class ServerIntegrationTest {
         String raw     = fClient.send(request);
 
         assertNotNull(raw);
-        assertTrue(raw.contains("Success"),
-                "Response must contain 'Success' for existing ID");
 
         Type type = new TypeToken<ServerResponse<TrailMedia>>() {}.getType();
         ServerResponse<TrailMedia> response = fGson.fromJson(raw, type);
 
+        assertTrue(response.isOk(), "Response status must be OK for existing ID");
         assertNotNull(response.getData());
         assertEquals(1L, response.getData().getId());
     }
 
-    // Checks: server returns Error response for a non-existent ID
+    // Checks: server returns ERROR response for a non-existent ID
     @Test
     void server_getTrailMediaById_returnsError_whenIdDoesNotExist() throws Exception {
         String request = fClient.buildActionWithId("GET_TRAILMEDIA_BY_ID", 999_999L);
         String raw     = fClient.send(request);
 
         assertNotNull(raw);
-        assertTrue(raw.contains("Error"),
-                "Response must contain 'Error' for non-existent ID");
+
+        Type type = new TypeToken<ServerResponse<TrailMedia>>() {}.getType();
+        ServerResponse<TrailMedia> response = fGson.fromJson(raw, type);
+
+        assertFalse(response.isOk(), "Response must not be OK for non-existent ID");
     }
 
     // ── ADD_TRAILMEDIA and DELETE_TRAILMEDIA ──────────────────────────────
@@ -121,16 +120,13 @@ class ServerIntegrationTest {
         String raw     = fClient.send(request);
 
         assertNotNull(raw);
-        assertTrue(raw.contains("\"OK\"") || raw.contains("OK"),
-                "Response status must be OK for successful insert");
 
         Type type = new TypeToken<ServerResponse<TrailMedia>>() {}.getType();
         ServerResponse<TrailMedia> response = fGson.fromJson(raw, type);
 
-        assertNotNull(response.getData(),
-                "Inserted entity must not be null");
-        assertTrue(response.getData().getId() > 0,
-                "Auto-generated ID must be positive");
+        assertTrue(response.isOk(), "Response status must be OK for successful insert");
+        assertNotNull(response.getData(), "Inserted entity must not be null");
+        assertTrue(response.getData().getId() > 0, "Auto-generated ID must be positive");
 
         // Cleans up: sends delete request to remove the test record
         long insertedId = response.getData().getId();
@@ -159,22 +155,18 @@ class ServerIntegrationTest {
 
         String uploadRaw = fClient.send(fGson.toJson(uploadReq));
         assertNotNull(uploadRaw, "Upload response must not be null");
-        assertFalse(uploadRaw.contains("\"ERROR\""),
-                "Upload must not return an error. Got: " + uploadRaw);
 
-        // Parses: upload response to get the auto-generated ID
         Type tmType = new TypeToken<ServerResponse<TrailMedia>>() {}.getType();
         ServerResponse<TrailMedia> uploadResponse = fGson.fromJson(uploadRaw, tmType);
 
-        assertNotNull(uploadResponse.getData(),
-                "Upload response data must not be null");
+        assertTrue(uploadResponse.isOk(), "Upload must return OK. Got: " + uploadRaw);
+        assertNotNull(uploadResponse.getData(), "Upload response data must not be null");
         long uploadedId = uploadResponse.getData().getId();
         assertTrue(uploadedId > 0, "Uploaded record must have a positive ID");
 
         // Retrieves: the record directly from DAO to verify bytes (F19)
-        // Note: GET_FILE via socket requires file_data stored — verified here via DAO
-        String URL  = "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-        JdbcTrailMediaDAO dao = new JdbcTrailMediaDAO(URL, "oop_gca2_user", "one");
+        String DB_URL = "jdbc:mysql://localhost:3306/oop_gca2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        JdbcTrailMediaDAO dao = new JdbcTrailMediaDAO(DB_URL, "oop_gca2_user", "one");
         ServerResponse<TrailMedia> dbResponse = dao.displayById(uploadedId);
 
         assertNotNull(dbResponse.getData(), "Record must exist in database after upload");
@@ -208,11 +200,11 @@ class ServerIntegrationTest {
 
         String uploadRaw = fClient.send(fGson.toJson(uploadReq));
         assertNotNull(uploadRaw, "Upload response must not be null");
-        assertFalse(uploadRaw.contains("\"ERROR\""),
-                "Upload must succeed. Got: " + uploadRaw);
 
         Type tmType = new TypeToken<ServerResponse<TrailMedia>>() {}.getType();
         ServerResponse<TrailMedia> uploadResp = fGson.fromJson(uploadRaw, tmType);
+
+        assertTrue(uploadResp.isOk(), "Upload must succeed. Got: " + uploadRaw);
         assertNotNull(uploadResp.getData(), "Upload must return inserted entity");
         long uploadedId = uploadResp.getData().getId();
         assertTrue(uploadedId > 0, "Uploaded ID must be positive");
@@ -222,8 +214,7 @@ class ServerIntegrationTest {
         JdbcTrailMediaDAO dao = new JdbcTrailMediaDAO(DB_URL, "oop_gca2_user", "one");
         ServerResponse<TrailMedia> metaResponse = dao.getMetadataById(uploadedId);
 
-        assertEquals("Success", metaResponse.getStatus(),
-                "getMetadataById must return Success");
+        assertTrue(metaResponse.isOk(), "getMetadataById must return OK");
         assertNotNull(metaResponse.getData(), "Metadata must not be null");
 
         TrailMedia meta = metaResponse.getData();
@@ -234,13 +225,13 @@ class ServerIntegrationTest {
         assertEquals(fileBytes.length, meta.getFFileSize());
 
         // Verifies: BLOB is null — not loaded in metadata-only query
-        assertNull(meta.getFFileData(),
-                "BLOB data must be null in metadata-only query (F20)");
+        assertNull(meta.getFFileData(), "BLOB data must be null in metadata-only query (F20)");
 
         // Cleans up
         String deleteRequest = fClient.buildActionWithId("DELETE_TRAILMEDIA", uploadedId);
         fClient.send(deleteRequest);
     }
+
     // ── DISCONNECT ────────────────────────────────────────────────────────
 
     // Checks: server responds to DISCONNECT with a Goodbye message (F21)
@@ -250,8 +241,13 @@ class ServerIntegrationTest {
         String raw     = fClient.send(request);
 
         assertNotNull(raw, "DISCONNECT response must not be null");
-        assertTrue(raw.contains("Goodbye") || raw.contains("OK"),
-                "DISCONNECT response must confirm disconnection");
+
+        Type type = new TypeToken<ServerResponse<Void>>() {}.getType();
+        ServerResponse<Void> response = fGson.fromJson(raw, type);
+
+        assertTrue(response.isOk(), "DISCONNECT response must be OK");
+        assertTrue(response.getMessage().contains("Goodbye"),
+                "DISCONNECT message must say Goodbye");
     }
 
     // ── Unknown action ────────────────────────────────────────────────────
@@ -263,7 +259,12 @@ class ServerIntegrationTest {
         String raw     = fClient.send(request);
 
         assertNotNull(raw);
-        assertTrue(raw.contains("ERROR") || raw.contains("Unknown"),
-                "Server must return an error for unknown action types");
+
+        Type type = new TypeToken<ServerResponse<Void>>() {}.getType();
+        ServerResponse<Void> response = fGson.fromJson(raw, type);
+
+        assertFalse(response.isOk(), "Server must return ERROR for unknown action types");
+        assertTrue(response.getMessage().contains("Unknown"),
+                "Error message must identify the unknown action");
     }
 }

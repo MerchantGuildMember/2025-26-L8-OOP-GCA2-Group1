@@ -68,4 +68,12 @@ public class RouteStop {
     public void setLocation(Location location) {
         this.location = location;
     }
+
+    @Override
+    public String toString() {
+        return "RouteStop{id=" + id +
+                ", name='" + route_name + '\'' +
+                ", location=" + location +
+                '}';
+    }
 }

@@ -14,6 +14,15 @@ import java.util.stream.Collectors;
 import utils.JsonUtil;
 
 
+/**
+ * JDBC implementation of {@link RouteStopDAO} for the Trail Tracker application.
+ *
+ * <p>Provides CRUD operations for {@link tables.RouteStop} records backed by a
+ * MySQL database. All queries use {@link java.sql.PreparedStatement} to prevent
+ * SQL injection.</p>
+ *
+ * @author Aleksy Cieslak
+ */
 public class JdbcRouteStopDAO implements RouteStopDAO {
     private String _url;
     private String _user;
@@ -47,7 +56,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
             ArrayList<RouteStop> out = new ArrayList<>();
             while (rs.next())
                 out.add(mapRow(rs));
-            return new ServerResponse<>("Success", "Retrieved Route Stops", out);
+            return ServerResponse.ok("Retrieved route stops", out);
         }
 
     }
@@ -55,7 +64,7 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
     @Override
     public ServerResponse<RouteStop> displayById(Long id) throws Exception {
         if (id == null || id <= 0)
-            return new ServerResponse<>("Error", "ID Error " + id, null);
+            return ServerResponse.error("ID Error: " + id);
 
         String sql = "SELECT rs.id, rs.route_name, rs.created_at, " +
                 "l.id AS loc_id, l.latitude, l.longitude, l.full_address, l.created_at AS loc_created_at " +
@@ -70,8 +79,8 @@ public class JdbcRouteStopDAO implements RouteStopDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next())
-                    return new ServerResponse<>("Error", "Route Stop not found" + id, null);
-                return new ServerResponse<>("Success", "Route Stop found", mapRow(rs));
+                    return ServerResponse.error("Route stop not found: " + id);
+                return ServerResponse.ok("Route stop found", mapRow(rs));
             }
         }
     }

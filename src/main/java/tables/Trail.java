@@ -27,9 +27,6 @@ public class Trail {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("must have a name");
         }
-        if (stops.isEmpty()) {
-            throw new IllegalArgumentException("stops cannot be empty");
-        }
 
         this.id = id;
         this.name = name;
@@ -45,9 +42,6 @@ public class Trail {
         }
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("must have a name");
-        }
-        if (stops.isEmpty()) {
-            throw new IllegalArgumentException("stops cannot be empty");
         }
 
         this.id = id;
