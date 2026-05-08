@@ -13,6 +13,16 @@ import java.util.stream.Collectors;
 
 import utils.JsonUtil;
 
+/**
+ * JDBC implementation of {@link TrailMediaDAO} for the Trail Tracker application.
+ *
+ * <p>Provides CRUD operations for {@link tables.TrailMedia} records backed by a
+ * MySQL database, including binary file upload (BLOB), metadata-only retrieval,
+ * and file data retrieval. All queries use {@link java.sql.PreparedStatement}
+ * to prevent SQL injection.</p>
+ *
+ * @author Aleksy Cieslak
+ */
 public class JdbcTrailMediaDAO implements TrailMediaDAO {
 
     private String _url;

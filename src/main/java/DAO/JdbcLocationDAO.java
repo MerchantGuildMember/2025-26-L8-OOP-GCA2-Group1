@@ -13,6 +13,15 @@ import java.util.stream.Collectors;
 
 import utils.JsonUtil;
 
+/**
+ * JDBC implementation of {@link LocationDAO} for the Trail Tracker application.
+ *
+ * <p>Provides CRUD operations for {@link tables.Location} records backed by a
+ * MySQL database. All queries use {@link java.sql.PreparedStatement} to prevent
+ * SQL injection.</p>
+ *
+ * @author Aleksy Cieslak
+ */
 public class JdbcLocationDAO implements LocationDAO {
     private String _url;
     private String _user;

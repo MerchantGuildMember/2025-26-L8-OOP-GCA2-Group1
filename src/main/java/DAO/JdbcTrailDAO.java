@@ -14,6 +14,16 @@ import java.util.stream.Collectors;
 
 import utils.JsonUtil;
 
+/**
+ * JDBC implementation of {@link TrailDAO} for the Trail Tracker application.
+ *
+ * <p>Provides CRUD operations for {@link tables.Trail} records backed by a
+ * MySQL database. Eagerly loads associated {@link tables.RouteStop} and
+ * {@link tables.Location} entities. All queries use
+ * {@link java.sql.PreparedStatement} to prevent SQL injection.</p>
+ *
+ * @author Aleksy Cieslak
+ */
 public class JdbcTrailDAO implements TrailDAO {
     private String _url;
     private String _user;
