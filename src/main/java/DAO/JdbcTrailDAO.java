@@ -59,13 +59,13 @@ public class JdbcTrailDAO implements TrailDAO {
         }
 
 
-        return new ServerResponse<>("Success", "Retrieve trails", trails);
+        return ServerResponse.ok("Retrieved trails", trails);
     }
 
     @Override
     public ServerResponse<Trail> displayById(Long id) throws Exception {
         if (id == null || id <= 0) {
-            return new ServerResponse<>("Error", "ID Error" + id, null);
+            return ServerResponse.error("ID Error: " + id);
         }
 
         String sql = "SELECT id, name, description, difficulty, estimated_time FROM trail WHERE id = ?";
@@ -77,7 +77,7 @@ public class JdbcTrailDAO implements TrailDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    return new ServerResponse<>("Error", "Trail not found", null);
+                    return ServerResponse.error("Trail not found: " + id);
 
                 }
 
@@ -89,7 +89,7 @@ public class JdbcTrailDAO implements TrailDAO {
                 ArrayList<RouteStop> stops = new ArrayList<>(loadStopsForTrail(id));
 
                 Trail trail = new Trail(id, name, description, difficulty, estimatedTime, stops);
-                return new ServerResponse<>("Success", "Retrieve trail", trail);
+                return ServerResponse.ok("Retrieved trail", trail);
             }
         }
     }
