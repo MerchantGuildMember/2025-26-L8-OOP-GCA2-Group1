@@ -59,9 +59,6 @@ public class JdbcTrailDAO implements TrailDAO {
                 double estimatedTime = rs.getDouble("estimated_time");
 
                 ArrayList<RouteStop> stops = new ArrayList<>(loadStopsForTrail(id));
-                if (stops.isEmpty()) {
-                    continue;
-                }
 
                 Trail trail = new Trail(id, name, description, difficulty, estimatedTime, stops);
                 trails.add(trail);
