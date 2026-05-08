@@ -47,7 +47,7 @@ class TrailMediaDaoTest {
         ServerResponse<ArrayList<TrailMedia>> response = fDao.displayAll();
 
         assertNotNull(response);
-        assertEquals("Success", response.getStatus());
+        assertTrue(response.isOk());
         assertNotNull(response.getData());
         assertFalse(response.getData().isEmpty());
     }
@@ -74,7 +74,7 @@ class TrailMediaDaoTest {
         ServerResponse<TrailMedia> response = fDao.displayById(id);
 
         assertNotNull(response);
-        assertEquals("Success", response.getStatus());
+        assertTrue(response.isOk());
         assertNotNull(response.getData());
         assertEquals(id, response.getData().getId());
 
@@ -88,7 +88,7 @@ class TrailMediaDaoTest {
         ServerResponse<TrailMedia> response = fDao.displayById(999_999L);
 
         assertNotNull(response);
-        assertEquals("Error", response.getStatus());
+        assertFalse(response.isOk());
         assertNull(response.getData());
     }
 
@@ -118,11 +118,11 @@ class TrailMediaDaoTest {
         TrailMedia reconstructed = gson.fromJson(json, TrailMedia.class);
 
         assertNotNull(reconstructed);
-        assertEquals(original.getId(),             reconstructed.getId());
-        assertEquals(original.getMedia_type(),     reconstructed.getMedia_type());
-        assertEquals(original.getUrl(),            reconstructed.getUrl());
-        assertEquals(original.getFFileName(),      reconstructed.getFFileName());
-        assertEquals(original.getFContentType(),   reconstructed.getFContentType());
-        assertEquals(original.getFFileSize(),      reconstructed.getFFileSize());
+        assertEquals(original.getId(),           reconstructed.getId());
+        assertEquals(original.getMedia_type(),   reconstructed.getMedia_type());
+        assertEquals(original.getUrl(),          reconstructed.getUrl());
+        assertEquals(original.getFFileName(),    reconstructed.getFFileName());
+        assertEquals(original.getFContentType(), reconstructed.getFContentType());
+        assertEquals(original.getFFileSize(),    reconstructed.getFFileSize());
     }
 }
